@@ -100,7 +100,8 @@
         .is-nva { background-color: var(--red); color: white; border: 1px solid var(--red);}
         .is-bnva { background-color: var(--yellow); color: #000; border: 1px solid var(--yellow);}
         
-        .history-time { font-weight: bold; font-family: monospace; font-size: 0.95rem; min-width: 45px; text-align: right;}
+        .history-time { font-weight: bold; font-family: monospace; font-size: 0.95rem; min-width: 45px; text-align: center;}
+        .history-perc { font-weight: bold; font-family: monospace; font-size: 0.85rem; min-width: 40px; text-align: center; color: var(--text-muted); }
         
         .element-desc { flex: 1; background: transparent; border: none; border-bottom: 1px dashed var(--border); color: white; text-align: left; font-size: 0.85rem; font-weight: normal; padding: 4px; border-radius: 0; min-width: 0;}
         .element-desc:focus { outline: none; border-bottom: 1px solid var(--blue); background: rgba(255,255,255,0.05);}
@@ -289,7 +290,8 @@
             font-size: 9.5pt !important;
             font-weight: 700 !important;
             min-width: 0 !important;
-            text-align: left !important;
+            text-align: center !important;
+            justify-content: center !important;
             display: inline-flex !important;
             align-items: center !important;
             min-height: 34px !important;
@@ -460,8 +462,8 @@
             max-width: 70px !important;
             min-width: 70px !important;
             white-space: nowrap !important;
-            text-align: right !important;
-            justify-self: end !important;
+            text-align: center !important;
+            justify-self: center !important;
             font-variant-numeric: tabular-nums !important;
             font-size: 9pt !important;
         }
