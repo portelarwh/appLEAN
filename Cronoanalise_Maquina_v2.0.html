@@ -125,6 +125,8 @@ body.export-mode .chart-title{
         .fixed-bottom { position: fixed; bottom: 0; left: 0; right: 0; padding: 10px; background: linear-gradient(transparent, var(--bg-color) 30%); z-index: 50;}
         .btn-lap { width: 100%; padding: 20px; font-size: 1.8rem; background-color: var(--blue); border-radius: 10px; box-shadow: 0 5px 0 #0056b3; }
         .btn-lap:active:not(:disabled) { transform: translateY(5px); box-shadow: none; }
+        .lap-obs-input { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: white; font-size: 0.9rem; margin-bottom: 6px; display: none; }
+        .lap-obs-input::placeholder { color: var(--text-muted); }
         
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px;}
         .modal-content { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center;}
@@ -485,6 +487,7 @@ body.export-mode .hist-label{
 </div>
 
 <div class="fixed-bottom">
+    <input type="text" id="lapObs" class="lap-obs-input" placeholder="Observação do ciclo (opcional)..." maxlength="80">
     <button id="btnLap" class="btn-lap" onclick="recordLap()" disabled>⏱ LAP</button>
 </div>
 
@@ -527,7 +530,7 @@ body.export-mode .hist-label{
   },
   'estabilidade': {
     title: 'Índice de Estabilidade',
-    text: 'Indicador de consistência do processo baseado na variação dos ciclos. Quanto mais próximo de 100%, menor a variabilidade entre medições.'
+    text: 'Indicador de consistência do processo: 100% − (Desvio Padrão ÷ Média × 100). Quanto mais próximo de 100%, mais repetível o processo. Abaixo de 85%: variação relevante. Abaixo de 70%: instabilidade crítica. Recomenda-se ao menos 10 amostras para resultado confiável.'
   },
   'eficiencia': {
     title: 'Eficiência',
@@ -657,23 +660,18 @@ function getExecutiveSummaryText() {
         const eficiencia = getText('valEfficiency', '--');
 
         const timeUnitValue = getValue('timeUnit', '60');
-        const takt = getValue('taktTime', '');
-        const meta = getValue('targetCycle', '');
-        const tolerancia = getValue('tolerance', '');
-        const lote = getValue('batchSize', '');
-        const observacao = getValue('notes', '');
+        const takt = getValue('takt', '');
+        const meta = getValue('target', '');
+        const observacao = getValue('lapObs', '');
 
         let unidadeTempo = 'un/min';
         if (timeUnitValue === '3600') unidadeTempo = 'un/h';
         if (timeUnitValue === '1') unidadeTempo = 'un/s';
 
         const params = [];
-        if (takt) params.push(`• 🎯 Takt / meta de ritmo: ${takt}`);
-        if (meta) params.push(`• ⌛ Meta de ciclo: ${meta}`);
-        if (tolerancia) params.push(`• 📐 Tolerância: ${tolerancia}`);
-        if (lote) params.push(`• 📦 Lote: ${lote}`);
+        if (takt) params.push(`• 🎯 Takt Time: ${takt}s`);
+        if (meta) params.push(`• 🎯 Meta: ${meta} ${unidadeTempo}`);
         params.push(`• 🧭 Unidade de capacidade: ${unidadeTempo}`);
-        if (observacao) params.push(`• 🗒️ Observação: ${observacao}`);
 
         return [
             `📄 DADOS TÉCNICOS`,
@@ -913,7 +911,8 @@ async function generatePNG() {
         document.getElementById('btnStart').innerText = "▶ Iniciar";
         document.getElementById('btnStop').disabled = false;
         document.getElementById('btnLap').disabled = false;
-        
+        document.getElementById('lapObs').style.display = 'block';
+
         ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = true);
         updateLiveTimer();
     }
@@ -928,25 +927,30 @@ async function generatePNG() {
         document.getElementById('btnStart').innerText = "▶ Retomar";
         document.getElementById('btnStop').disabled = true;
         document.getElementById('btnLap').disabled = true;
+        document.getElementById('lapObs').style.display = 'none';
     }
 
     function recordLap() {
         if (!isRunning) return;
         let now = Date.now();
-        let rawCycleTime = (now - lastLapTime) / 1000; 
+        let rawCycleTime = (now - lastLapTime) / 1000;
         let cycleTime = Number(rawCycleTime.toFixed(2));
-        
+        let obs = document.getElementById('lapObs').value.trim();
+
         lapCounterId++;
-        laps.push({ id: lapCounterId, time: cycleTime });
-        
-        lastLapTime = now; 
+        laps.push({ id: lapCounterId, time: cycleTime, obs: obs });
+
+        document.getElementById('lapObs').value = '';
+        lastLapTime = now;
         elapsedBeforePause = 0;
         updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        saveToStorage();
     }
 
     function deleteLap(id) {
         laps = laps.filter(lap => lap.id !== id);
         updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        saveToStorage();
     }
 
     function calculateStats() {
@@ -1051,14 +1055,16 @@ async function generatePNG() {
         for (let i = laps.length - 1; i >= 0; i--) {
             let row = document.createElement('div');
             row.className = 'history-row';
-            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s</span><button class="btn-delete" onclick="deleteLap(${laps[i].id})">🗑 Excl</button>`;
+            let obsHtml = laps[i].obs ? `<span style="flex:2;font-size:0.78rem;color:var(--text-muted);text-align:left;padding-left:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${laps[i].obs}">📝 ${laps[i].obs}</span>` : `<span style="flex:2;"></span>`;
+            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s</span>${obsHtml}<button class="btn-delete" onclick="deleteLap(${laps[i].id})">🗑 Excl</button>`;
             listScreen.appendChild(row);
         }
 
         for (let i = 0; i < laps.length; i++) {
             let row = document.createElement('div');
             row.className = 'history-row';
-            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s</span>`;
+            let obsText = laps[i].obs ? ` — ${laps[i].obs}` : '';
+            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s${obsText}</span>`;
             listPrint.appendChild(row);
         }
     }
@@ -1208,20 +1214,68 @@ function resetTimer() {
         document.getElementById('btnStart').innerText = "▶ Iniciar";
         document.getElementById('btnStop').disabled = true;
         document.getElementById('btnLap').disabled = true;
+        document.getElementById('lapObs').value = '';
+        document.getElementById('lapObs').style.display = 'none';
         
         ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = false);
         updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        localStorage.removeItem(STORAGE_KEY);
     }
+
+    // ==========================================
+    // PERSISTÊNCIA DE SESSÃO (localStorage)
+    // ==========================================
+    const STORAGE_KEY = 'cronoanalise_maquina_v2';
+
+    function saveToStorage() {
+        const config = {
+            equipName: document.getElementById('equipName').value,
+            units: document.getElementById('units').value,
+            timeUnit: document.getElementById('timeUnit').value,
+            takt: document.getElementById('takt').value,
+            target: document.getElementById('target').value
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ config, laps, lapCounterId }));
+    }
+
+    function loadFromStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (data.config) {
+                document.getElementById('equipName').value = data.config.equipName || '';
+                document.getElementById('units').value = data.config.units || '1';
+                document.getElementById('timeUnit').value = data.config.timeUnit || '3600';
+                document.getElementById('takt').value = data.config.takt || '';
+                document.getElementById('target').value = data.config.target || '';
+                changeTimeUnit();
+            }
+            if (Array.isArray(data.laps) && data.laps.length > 0) {
+                laps = data.laps;
+                lapCounterId = data.lapCounterId || laps.length;
+                updateUI();
+                document.getElementById('btnExport').disabled = false;
+                document.getElementById('btnPDF').disabled = false;
+                document.getElementById('btnPNG').disabled = false;
+                document.getElementById('btnWhatsApp').disabled = false;
+            }
+        } catch(e) {
+            console.warn('Erro ao carregar sessão salva:', e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFromStorage);
 
     function exportToExcel() {
         if (laps.length === 0) return;
         let equipName = document.getElementById('equipName').value.trim() || "Nao_Identificado";
         let safeFileName = equipName.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
         
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFFEquipamento/Operacao:;" + equipName + "\n\nAmostra;Tempo de Ciclo (s)\n";
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFEquipamento/Operacao:;" + equipName + "\n\nAmostra;Tempo de Ciclo (s);Observacao\n";
 
         laps.forEach(function(lap, index) {
-            csvContent += `${index + 1};${String(lap.time.toFixed(2)).replace('.', ',')}\r\n`;
+            csvContent += `${index + 1};${String(lap.time.toFixed(2)).replace('.', ',')};${lap.obs || ''}\r\n`;
         });
 
         let link = document.createElement("a");
