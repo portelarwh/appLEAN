@@ -347,7 +347,7 @@ body.export-mode .hist-label{
         </div>
         <div style="text-align: right;">
             <p><strong>Data:</strong> <span id="printDate">--/--/----</span></p>
-            <p><strong>Analista:</strong> Pedro Portela</p>
+            <p><strong>Analista:</strong> <span id="printAnalyst">—</span></p>
         </div>
     </div>
 
@@ -358,6 +358,10 @@ body.export-mode .hist-label{
                     <div class="input-group full-width">
                         <label>Equipamento / Operação</label>
                         <input type="text" id="equipName" placeholder="Ex: Torno CNC, Montagem..." >
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Analista Responsável</label>
+                        <input type="text" id="analystName" placeholder="Nome de quem está medindo..." >
                     </div>
                     <div class="input-group">
                         <label class="label-with-info">Peças / Ciclo <span class="info-icon info-inline" onclick="showInfo('pecas_ciclo')">!</span></label>
@@ -598,6 +602,9 @@ function showInfo(key) {
             document.getElementById('printExecutiveSummary').innerText = text;
         }
 
+        const analyst = document.getElementById('analystName').value.trim() || 'Não informado';
+        document.getElementById('printAnalyst').innerText = analyst;
+
         let hoje = new Date();
         document.getElementById('printDate').innerText = hoje.toLocaleDateString('pt-BR') + " às " + hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     }
@@ -649,6 +656,7 @@ function getExecutiveSummaryText() {
         const getValue = (id, fallback='') => (document.getElementById(id)?.value ?? fallback).toString().trim();
 
         const equipName = getValue('equipName', 'Operação não informada');
+        const analystName = getValue('analystName', 'Não informado');
         const samples = getText('valSamples', '0');
         const avgCycle = getText('valAvgCycle', '0.00s');
         const minCycle = getText('valMinCycle', '0.00s');
@@ -676,6 +684,7 @@ function getExecutiveSummaryText() {
         return [
             `📄 DADOS TÉCNICOS`,
             `🏭 *Operação:* ${equipName}`,
+            `👤 *Analista:* ${analystName}`,
             `🔢 *Amostras registradas:* ${samples}`,
             ``,
             `⚙️ *Parâmetros da simulação*`,
@@ -913,7 +922,7 @@ async function generatePNG() {
         document.getElementById('btnLap').disabled = false;
         document.getElementById('lapObs').style.display = 'block';
 
-        ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = true);
+        ['equipName', 'analystName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = true);
         updateLiveTimer();
     }
 
@@ -1217,7 +1226,7 @@ function resetTimer() {
         document.getElementById('lapObs').value = '';
         document.getElementById('lapObs').style.display = 'none';
         
-        ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = false);
+        ['equipName', 'analystName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = false);
         updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
         localStorage.removeItem(STORAGE_KEY);
     }
@@ -1230,6 +1239,7 @@ function resetTimer() {
     function saveToStorage() {
         const config = {
             equipName: document.getElementById('equipName').value,
+            analystName: document.getElementById('analystName').value,
             units: document.getElementById('units').value,
             timeUnit: document.getElementById('timeUnit').value,
             takt: document.getElementById('takt').value,
@@ -1245,6 +1255,7 @@ function resetTimer() {
             const data = JSON.parse(raw);
             if (data.config) {
                 document.getElementById('equipName').value = data.config.equipName || '';
+                document.getElementById('analystName').value = data.config.analystName || '';
                 document.getElementById('units').value = data.config.units || '1';
                 document.getElementById('timeUnit').value = data.config.timeUnit || '3600';
                 document.getElementById('takt').value = data.config.takt || '';
