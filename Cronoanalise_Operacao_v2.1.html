@@ -190,19 +190,19 @@
 
         .export-mode .print-only { display: inline-block !important; }
 
-        .export-mode #print-wrapper { display: flex !important; flex-direction: row !important; gap: 16px !important; align-items: flex-start !important; width: 100% !important; }
-        .export-mode .col-1 { width: 38% !important; flex-shrink: 0 !important; }
-        .export-mode .col-2 { flex: 1 !important; min-width: 0 !important; }
+        .export-mode #print-wrapper { display: flex !important; flex-direction: column !important; gap: 0 !important; width: 100% !important; }
+        .export-mode .col-1 { width: 100% !important; }
+        .export-mode .col-2 { width: 100% !important; }
 
-        .export-mode .print-summary { display: grid !important; grid-template-columns: 1fr; gap: 2px; margin-bottom: 6px; font-size: 8.5pt; background: #f8f9fa; padding: 7px 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .export-mode .print-summary { display: block !important; margin-bottom: 6px; font-size: 9pt; background: #f8f9fa; padding: 7px 12px; border: 1px solid #ddd; border-radius: 5px; }
 
         .export-mode label { color: #555 !important; }
         .export-mode .result-title { font-size: 6.5pt !important; }
         .export-mode .result-sub { font-size: 7.5pt !important; color: #666 !important; }
 
-        .export-mode .results-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 4px !important; margin-bottom: 6px !important; }
-        .export-mode .result-box { background: #f8f9fa !important; padding: 5px 4px !important; border-style: solid !important; border-width: 1px !important; }
-        .export-mode .result-value { font-size: 11pt !important; color: #000 !important; }
+        .export-mode .results-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; margin-bottom: 8px !important; }
+        .export-mode .result-box { background: #f8f9fa !important; padding: 7px 6px !important; border-style: solid !important; border-width: 1px !important; }
+        .export-mode .result-value { font-size: 13pt !important; color: #000 !important; }
         
         .export-mode .text-blue { color: #007bff !important; }
         .export-mode .text-orange { color: #fd7e14 !important; }
@@ -387,41 +387,45 @@
             min-width: 0 !important;
         }
 
-        .export-mode .print-header { display: flex !important; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #333; padding-bottom: 7px; margin-bottom: 10px; width: 100%; }
-        .export-mode .print-header h1 { margin: 0; font-size: 13pt; color: #222; }
-        .export-mode .print-header p { margin: 0; font-size: 8pt; color: #555; line-height: 1.5; }
+        .export-mode .print-header { display: flex !important; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 12px; width: 100%; }
+        .export-mode .print-header h1 { margin: 0; font-size: 15pt; color: #222; }
+        .export-mode .print-header p { margin: 0; font-size: 8.5pt; color: #555; line-height: 1.6; }
 
-        .export-mode .print-executive-summary { display: block !important; font-size: 7.5pt; font-style: italic; color: #444; margin-bottom: 6px; padding: 6px 9px; border-left: 3px solid var(--blue); background: #f4f4f4; line-height: 1.3; }
+        .export-mode .print-executive-summary { display: block !important; font-size: 8pt; font-style: italic; color: #444; margin-bottom: 8px; padding: 8px 11px; border-left: 3px solid var(--blue); background: #f4f4f4; line-height: 1.35; }
 
-        .export-mode .gantt-wrapper { height: 38px !important; margin-bottom: 6px !important; }
+        .export-mode .gantt-wrapper { height: 40px !important; margin-bottom: 8px !important; }
+        .export-mode .chart-title { font-size: 8pt !important; margin-bottom: 4px !important; margin-top: 8px !important; }
 
-        /* Sem max-height — exibe todas as etapas no relatório */
+        /* Sem max-height — passa para página 2 se necessário */
         .export-mode .history-container { max-height: none !important; overflow: visible !important; }
     
-        /* ===== Linhas compactas — cabe 20+ etapas em A4 retrato ===== */
-        .export-mode .history-table-header,
+        /* ===== Linhas compactas — cabe 25+ etapas por página ===== */
+        .export-mode .history-table-header {
+            grid-template-columns: 26px 68px 44px 48px 36px 1fr !important;
+            column-gap: 5px !important;
+            background: #f1f3f5 !important; border: 1px solid #d6d9dd !important;
+            border-radius: 4px !important; padding: 4px 6px !important;
+            font-size: 7pt !important; font-weight: 700 !important; color: #4b5563 !important;
+            margin-bottom: 3px !important;
+        }
         .export-mode .history-row {
-            grid-template-columns: 28px 72px 46px 50px 38px 1fr !important;
-            column-gap: 6px !important;
-            border: 1px solid #e5e7eb !important;
-            background: #ffffff !important;
-            border-radius: 0 !important;
-            padding: 3px 6px !important;
-            min-height: 0 !important;
+            grid-template-columns: 26px 68px 44px 48px 36px 1fr !important;
+            column-gap: 5px !important;
+            border: none !important; border-bottom: 1px solid #f0f0f0 !important;
+            background: #ffffff !important; border-radius: 0 !important;
+            padding: 3px 6px !important; min-height: 0 !important;
         }
         .export-mode .history-row:nth-child(even) { background: #fafafa !important; }
 
         .export-mode .history-id {
-            width: 28px !important; max-width: 28px !important; min-width: 28px !important;
-            white-space: nowrap !important; text-align: center !important;
-            justify-self: center !important; font-size: 7pt !important;
-            font-variant-numeric: tabular-nums !important;
+            width: 26px !important; max-width: 26px !important; min-width: 26px !important;
+            text-align: center !important; justify-self: center !important;
+            font-size: 7pt !important; font-variant-numeric: tabular-nums !important;
         }
-
         .export-mode .type-badge {
-            width: 72px !important; max-width: 72px !important; min-width: 72px !important;
+            width: 68px !important; max-width: 68px !important; min-width: 68px !important;
             justify-content: center !important; text-align: center !important;
-            padding: 2px 4px !important; min-height: 0 !important;
+            padding: 2px 3px !important; min-height: 0 !important;
             border-radius: 3px !important; font-size: 7pt !important;
         }
         .export-mode .type-inline { width: 100% !important; justify-content: center !important; gap: 0 !important; }
@@ -429,27 +433,22 @@
         .export-mode .type-label { display: inline !important; font-weight: 700 !important; }
 
         .export-mode .badge-va.print-only {
-            width: 46px !important; max-width: 46px !important; min-width: 46px !important;
-            min-height: 0 !important; padding: 2px 4px !important;
+            width: 44px !important; max-width: 44px !important; min-width: 44px !important;
+            min-height: 0 !important; padding: 2px 3px !important;
             font-size: 7pt !important; border-radius: 3px !important;
         }
-
         .export-mode .history-time {
-            width: 50px !important; max-width: 50px !important; min-width: 50px !important;
-            white-space: nowrap !important; text-align: center !important;
-            justify-self: center !important; font-size: 7.5pt !important;
-            font-variant-numeric: tabular-nums !important;
-        }
-
-        .export-mode .history-perc {
-            width: 38px !important; max-width: 38px !important; min-width: 38px !important;
+            width: 48px !important; max-width: 48px !important; min-width: 48px !important;
             text-align: center !important; justify-self: center !important;
-            font-size: 7.5pt !important;
+            font-size: 7.5pt !important; font-variant-numeric: tabular-nums !important;
         }
-
+        .export-mode .history-perc {
+            width: 36px !important; max-width: 36px !important; min-width: 36px !important;
+            text-align: center !important; justify-self: center !important; font-size: 7.5pt !important;
+        }
         .export-mode .element-desc-print {
             width: 100% !important; min-width: 0 !important;
-            font-size: 7.5pt !important; line-height: 1.25 !important; color: #111827 !important;
+            font-size: 7.5pt !important; line-height: 1.2 !important; color: #111827 !important;
         }
 
     
@@ -977,33 +976,37 @@ function showInfo(key) {
 
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const pdfW = pdf.internal.pageSize.getWidth();   // 210mm
+        const pdfH = pdf.internal.pageSize.getHeight();  // 297mm
 
         const img = new Image();
         img.src = imgDataUrl;
-        await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-        });
+        await new Promise(r => img.onload = r);
 
-        const ratio = img.width / img.height;
-        const pageRatio = pdfWidth / pdfHeight;
-        let renderWidth, renderHeight, x, y;
+        const imgWmm = pdfW;
+        const imgHmm = img.height * (pdfW / img.width);
 
-        if (ratio > pageRatio) {
-            renderWidth = pdfWidth;
-            renderHeight = pdfWidth / ratio;
-            x = 0;
-            y = (pdfHeight - renderHeight) / 2;
+        if (imgHmm <= pdfH) {
+            pdf.addImage(imgDataUrl, 'PNG', 0, 0, imgWmm, imgHmm, undefined, 'FAST');
         } else {
-            renderHeight = pdfHeight;
-            renderWidth = pdfHeight * ratio;
-            y = 0;
-            x = (pdfWidth - renderWidth) / 2;
+            // Multi-página: fatia a imagem em blocos de altura A4
+            const pxPerMm = img.width / pdfW;
+            const pageHeightPx = pdfH * pxPerMm;
+            let offsetPx = 0;
+            let page = 0;
+            while (offsetPx < img.height) {
+                if (page > 0) pdf.addPage();
+                const sliceH = Math.min(pageHeightPx, img.height - offsetPx);
+                const c = document.createElement('canvas');
+                c.width = img.width;
+                c.height = Math.ceil(sliceH);
+                c.getContext('2d').drawImage(img, 0, -offsetPx);
+                const sliceHmm = c.height / pxPerMm;
+                pdf.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, pdfW, sliceHmm, undefined, 'FAST');
+                offsetPx += pageHeightPx;
+                page++;
+            }
         }
-
-        pdf.addImage(imgDataUrl, 'PNG', x, y, renderWidth, renderHeight, undefined, 'FAST');
         return pdf.output('blob');
     }
 

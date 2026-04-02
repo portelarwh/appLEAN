@@ -190,9 +190,11 @@ body.export-mode .chart-title{
         .export-mode .print-executive-summary { display: block !important; font-size: 7.5pt; font-style: italic; color: #444; margin-bottom: 8px; padding: 6px 9px; border-left: 3px solid var(--blue); background: #f4f4f4; line-height: 1.3; }
 
         .export-mode .text-muted, .export-mode label { color: #555 !important; }
-        .export-mode .result-title { color: #444 !important; font-size: 7pt !important; }
-        .export-mode .result-box { background: #f8f9fa !important; border: 1px solid #ddd !important; padding: 6px !important; }
+        .export-mode .result-title { color: #444 !important; font-size: 6.5pt !important; }
+        .export-mode .result-box { background: #f8f9fa !important; border: 1px solid #ddd !important; padding: 5px 6px !important; }
         .export-mode .result-value { font-size: 12pt !important; color: #000 !important; }
+        .export-mode .results-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 5px !important; }
+        .export-mode .full-width { grid-column: span 4 !important; }
 
         .export-mode .text-green { color: #28a745 !important; }
         .export-mode .text-red { color: #dc3545 !important; }
@@ -217,19 +219,22 @@ body.export-mode .chart-title{
         .export-mode #historyListScreen { display: none !important; }
         .export-mode #historyCard { width: 100% !important; margin-top: 8px !important; border-top: 1px solid #ccc !important; padding-top: 10px !important; display: block !important; }
 
-        /* 7 colunas compactas — 20 amostras em 3 linhas */
+        /* 7 colunas compactas — 20 amostras em 3 linhas, 30 amostras em 5 */
         .export-mode .print-only-history {
             display: grid !important;
             grid-template-columns: repeat(7, 1fr) !important;
-            gap: 4px 8px !important;
+            gap: 2px 6px !important;
             background: white !important; border: none !important; width: 100% !important;
         }
         .export-mode .history-row {
-            border-bottom: 1px solid #eee !important;
-            padding: 2px 2px !important;
+            border: none !important;
+            border-bottom: 1px solid #f0f0f0 !important;
+            padding: 2px 3px !important;
             color: #000 !important;
-            font-size: 8pt !important;
+            font-size: 7.5pt !important;
         }
+        .export-mode .history-id { font-size: 7pt !important; color: #888 !important; }
+        .export-mode .history-time { font-size: 8pt !important; font-weight: 700 !important; font-family: monospace !important; }
     
 .app-version { position: absolute; top: 8px; right: 10px; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); opacity: 0.9; pointer-events: none; }
 body.export-mode .app-version { display: none !important; }
@@ -821,34 +826,36 @@ async function generatePNG() {
         btn.disabled = true;
 
         try {
-            const imgData = await generateImageData(30);
+            const imgData = await generateImageData(0);
             const { jsPDF } = window.jspdf;
-            
-            // Cria um PDF deitado (Landscape) no formato A4
             const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            
+            const pdfW = pdf.internal.pageSize.getWidth();
+            const pdfH = pdf.internal.pageSize.getHeight();
+
             const img = new Image();
             img.src = imgData;
             await new Promise(r => img.onload = r);
-            
-            const ratio = img.width / img.height;
-            let renderWidth = pdfWidth;
-            let renderHeight = pdfWidth / ratio;
 
-            // Ajusta se ficar maior que a altura da folha
-            if (renderHeight > pdfHeight) {
-                renderHeight = pdfHeight;
-                renderWidth = pdfHeight * ratio;
+            const imgHmm = img.height * (pdfW / img.width);
+
+            if (imgHmm <= pdfH) {
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfW, imgHmm, undefined, 'FAST');
+            } else {
+                // Multi-página
+                const pxPerMm = img.width / pdfW;
+                const pageHeightPx = pdfH * pxPerMm;
+                let offsetPx = 0, page = 0;
+                while (offsetPx < img.height) {
+                    if (page > 0) pdf.addPage();
+                    const sliceH = Math.min(pageHeightPx, img.height - offsetPx);
+                    const c = document.createElement('canvas');
+                    c.width = img.width; c.height = Math.ceil(sliceH);
+                    c.getContext('2d').drawImage(img, 0, -offsetPx);
+                    pdf.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, pdfW, c.height / pxPerMm, undefined, 'FAST');
+                    offsetPx += pageHeightPx; page++;
+                }
             }
-
-            // Centraliza a imagem na folha
-            const x = (pdfWidth - renderWidth) / 2;
-            const y = (pdfHeight - renderHeight) / 2;
-
-            pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight);
-            pdf.save(`Cronoanalise_${Date.now()}.pdf`); // Baixa direto sem o Android interferir
+            pdf.save(`Cronoanalise_${Date.now()}.pdf`);
         } catch(e) {
             alert("Erro ao gerar PDF.");
         } finally {
