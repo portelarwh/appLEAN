@@ -922,7 +922,7 @@ async function generatePNG() {
         document.getElementById('btnLap').disabled = false;
         document.getElementById('lapObs').style.display = 'block';
 
-        ['equipName', 'analystName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = true);
+        ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = true);
         updateLiveTimer();
     }
 
@@ -1226,7 +1226,7 @@ function resetTimer() {
         document.getElementById('lapObs').value = '';
         document.getElementById('lapObs').style.display = 'none';
         
-        ['equipName', 'analystName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = false);
+        ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = false);
         updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
         localStorage.removeItem(STORAGE_KEY);
     }
