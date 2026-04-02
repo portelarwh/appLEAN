@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Multi Cronômetro</title>
+  <style>
+    :root{
+      --bg:#121212; --card:#1e1e1e; --text:#fff; --muted:#a0a0a0; --blue:#007bff;
+      --green:#28a745; --red:#dc3545; --orange:#fd7e14; --purple:#8e44ad; --yellow:#ffc107; --border:#333;
+      --teal:#20c997; --gray:#3a3a3a; --darkbtn:#2b2b2b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      padding:12px 12px 92px;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      position:relative;
+    }
+    h1{text-align:center;margin:6px 0 12px;font-size:1.3rem;}
+    .app-version{position:absolute;top:10px;right:12px;font-size:.72rem;font-weight:800;color:var(--muted);opacity:.9;pointer-events:none;z-index:2000;}
+
+    /* Header mais compacto e horizontal */
+    .header-stack{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+    .module-tabs{
+      display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;flex-wrap:nowrap;
+    }
+    .module-tabs::-webkit-scrollbar{display:none;}
+    .tab-btn{
+      flex:1 0 auto; min-width:108px; border:none; border-radius:10px; padding:8px 10px;
+      font-weight:800; text-transform:uppercase; letter-spacing:.2px; background:#2f2f2f; color:#fff; cursor:pointer;
+      font-size:.76rem; white-space:nowrap; line-height:1.1;
+    }
+    .tab-btn.active{background:var(--blue);}
+
+    .options-row{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;}
+    .options-row::-webkit-scrollbar{display:none;}
+    .options-row .primary{display:flex;gap:6px;align-items:center;min-width:max-content;}
+    .options-row .primary button,
+    .controls button,
+    .fab,
+    .modal-actions button,
+    .menu-list button,
+    .icon-btn,
+    .more,
+    .secondary-btn{
+      border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;
+    }
+    .options-row .primary button{
+      padding:8px 10px;background:#3a3a3a;font-size:.74rem;white-space:nowrap;line-height:1;
+    }
+    .options-row .more{
+      width:40px;min-width:40px;height:34px;border-radius:10px;background:#2b2b2b;color:#fff;
+      font-weight:900;border:1px solid rgba(255,255,255,.06);cursor:pointer;flex:0 0 auto;
+    }
+
+    .container{display:flex;flex-direction:column;gap:12px;}
+    body.layout-1 #container{display:flex;flex-direction:column;gap:12px;}
+    body.layout-2 #container{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;}
+    body.layout-6 #container{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start;}
+
+    .card{
+      background:var(--card);border-radius:14px;padding:12px;box-shadow:0 4px 10px rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.03);border-left:6px solid var(--blue);
+    }
+    body.layout-6 .card{padding:10px;}
+    .card.best{outline:1px solid rgba(40,167,69,.55)}
+    .card.worst{outline:1px solid rgba(220,53,69,.5)}
+    .card.dragging{opacity:.5;}
+
+    .card-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;}
+    .card-title{
+      flex:1;font-size:1rem;font-weight:700;background:transparent;border:none;color:#fff;
+      border-bottom:1px dashed transparent;padding:4px 2px;min-width:0;
+    }
+    .card-title:focus{outline:none;border-bottom:1px dashed var(--blue);}
+    .header-actions{display:flex;gap:6px;flex:0 0 auto;}
+    .icon-btn{background:#2b2b2b;color:#ddd;width:34px;height:34px;font-size:1rem;}
+    .drag-handle{
+      width:34px;height:34px;border-radius:8px;background:#2b2b2b;color:#ddd;display:flex;align-items:center;
+      justify-content:center;font-size:1.1rem;cursor:grab;user-select:none;flex:0 0 auto;
+    }
+    .compare-check{display:none;align-items:center;gap:6px;flex:0 0 auto;}
+    body.mode-compare .compare-check{display:flex;}
+    .compare-check input{width:18px;height:18px;}
+
+    .timer{
+      font-size:2.2rem;text-align:center;font-family:monospace;font-variant-numeric:tabular-nums;margin:10px 0 8px;
+    }
+    body.layout-6 .timer{font-size:1.5rem;margin:6px 0 6px;}
+    .timer-meta{text-align:center;font-size:.8rem;color:var(--muted);margin-bottom:10px;}
+    .status-chip{
+      display:inline-flex;align-items:center;justify-content:center;min-height:24px;padding:4px 8px;border-radius:999px;
+      font-size:.72rem;font-weight:700;border:1px solid transparent;
+    }
+    .status-ok{background:rgba(40,167,69,.2);color:#8ce1a1;border-color:rgba(40,167,69,.45);}
+    .status-bad{background:rgba(220,53,69,.2);color:#ff9a9a;border-color:rgba(220,53,69,.45);}
+    .status-near{background:rgba(255,193,7,.16);color:#ffda6a;border-color:rgba(255,193,7,.35);}
+    .status-none{background:#2a2a2a;color:var(--muted);border-color:var(--border);}
+    .status-run{background:rgba(0,123,255,.2);color:#8ebeff;border-color:rgba(0,123,255,.45);}
+
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:10px;}
+    body.layout-6 .stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .stat{background:#2a2a2a;border:1px solid var(--border);border-radius:8px;padding:6px 4px;text-align:center;}
+    .stat-label{display:block;font-size:.58rem;color:var(--muted);text-transform:uppercase;margin-bottom:3px;font-weight:700;}
+    .stat-value{display:block;font-size:.85rem;font-weight:700;font-family:monospace;}
+
+    .controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px;}
+    .controls button{padding:11px 8px;font-size:.88rem;}
+    .start{background:var(--green)}
+    .pause{background:var(--orange)}
+    .reset{background:var(--red)}
+    .lap{background:var(--blue)}
+    .checkpoint{background:var(--purple)}
+
+    .laps{margin-top:6px;border-top:1px solid var(--border);padding-top:8px;max-height:160px;overflow:auto;}
+    body.layout-6 .laps{max-height:120px;}
+    .lap-head,.lap-row{display:grid;grid-template-columns:44px 1fr 1fr 72px;gap:8px;padding:4px 0;align-items:center;font-size:.84rem;}
+    .lap-head{color:var(--muted);text-transform:uppercase;font-size:.62rem;font-weight:700;}
+    .lap-idx{color:#4dabf7}.lap-total,.lap-split{font-family:monospace;color:#ddd}.lap-meta{text-align:right;}
+    .empty{color:var(--muted);text-align:center;padding:8px 0 4px;font-size:.84rem;}
+
+    .fab{
+      position:fixed;right:18px;bottom:18px;width:60px;height:60px;background:var(--blue);font-size:2rem;line-height:1;
+      box-shadow:0 8px 16px rgba(0,0,0,.35);z-index:1000;
+    }
+    .branding{
+      text-align:center;margin-top:18px;margin-bottom:6px;font-size:.82rem;color:var(--muted);display:flex;
+      flex-direction:column;align-items:center;gap:3px;line-height:1.2;
+    }
+    .branding .linkedin-link{display:inline-flex;align-items:center;gap:5px;color:#0a66c2;text-decoration:none;font-weight:600;}
+    .branding .linkedin-link svg{width:13px;height:13px;fill:currentColor;}
+
+    .modal-overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:16px;z-index:1200;
+    }
+    .modal{
+      width:100%;max-width:440px;background:#1f1f1f;border:1px solid var(--border);border-radius:16px;padding:14px;
+      box-shadow:0 12px 28px rgba(0,0,0,.45);
+    }
+    .modal h3{margin:0 0 12px;font-size:1rem;}
+    .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .modal-actions{display:flex;gap:8px;margin-top:12px;}
+    .modal-actions button{flex:1;padding:11px 10px;}
+    .input,.select,textarea{
+      width:100%;background:#2a2a2a;color:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:.9rem;
+    }
+    textarea{min-height:82px;resize:vertical}
+    .menu-list{display:flex;flex-direction:column;gap:6px;}
+    .menu-list button{width:100%;background:#2a2a2a;padding:12px 10px;text-align:left;font-weight:600;}
+    .summary-box{background:#1a1a1a;border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:12px;font-size:.82rem;line-height:1.35;color:#ddd;}
+    .small-muted{color:var(--muted);font-size:.76rem;}
+    .mini-tag{display:inline-block;padding:3px 7px;border-radius:999px;background:#2a2a2a;color:#ddd;font-size:.7rem;font-weight:700;margin-right:4px;}
+    .compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;}
+    .compare-metric{background:#202020;border:1px solid var(--border);border-radius:10px;padding:10px;}
+
+    .fullscreen-overlay{position:fixed;inset:0;background:#111;display:none;z-index:1300;padding:16px;overflow:auto;}
+
+    @media (max-width: 900px){
+      body.layout-6 #container{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .compare-grid{grid-template-columns:1fr;}
+    }
+    @media (max-width: 680px){
+      body.layout-2 #container,
+      body.layout-6 #container{grid-template-columns:1fr;}
+      .modal-grid{grid-template-columns:1fr;}
+      .modal-grid > div{grid-column:auto !important;}
+      .stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+      .lap-head,.lap-row{grid-template-columns:34px 1fr 1fr 58px;font-size:.78rem;}
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="layout-1">
+  <div class="app-version">v1.7</div>
+  <h1>⏱ Multi Cronômetro</h1>
+
+  <div class="header-stack">
+    <div class="module-tabs">
+      <button class="tab-btn active" id="tabStopwatch" onclick="setModule('stopwatch')">Cronômetro</button>
+      <button class="tab-btn" id="tabCountdown" onclick="setModule('countdown')">Regressivo</button>
+      <button class="tab-btn" id="tabCompare" onclick="setModule('compare')">Comparativo</button>
+    </div>
+
+    <div class="options-row">
+      <div class="primary">
+        <button onclick="startAll()">▶ Iniciar todos</button>
+        <button onclick="pauseAll()">⏸ Pausar todos</button>
+        <button onclick="resetAll()">♻ Reset geral</button>
+      </div>
+      <button class="more" onclick="openOptions()">⋯</button>
+    </div>
+  </div>
+
+  <div id="container" class="container"></div>
+
+  <div class="branding">
+    <span>Desenvolvido por <a href="https://www.linkedin.com/in/pedro-ag-portela" target="_blank" rel="noopener" class="linkedin-link"><svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg> Pedro Portela</a></span>
+    <span>Especialista de Processos Industriais & Black Belt</span>
+  </div>
+
+  <button class="fab" onclick="quickAdd()">+</button>
+
+  <div class="modal-overlay" id="optionsModal">
+    <div class="modal">
+      <h3>Opções</h3>
+      <div class="menu-list">
+        <button onclick="setLayout(1)">📐 Layout: 1 por tela</button>
+        <button onclick="setLayout(2)">📐 Layout: 2 por tela</button>
+        <button onclick="setLayout(6)">📐 Layout: 6 por tela</button>
+        <button onclick="sortCurrentList('manual')">↕ Ordem manual (arrastar)</button>
+        <button onclick="sortCurrentList('name')">↕ Ordenar por nome</button>
+        <button onclick="sortCurrentList('metric')">↕ Ordenar por desempenho</button>
+        <button onclick="shareGlobalSummary()">💬 WhatsApp (resumo)</button>
+        <button onclick="exportGlobalCsv()">⬇ CSV Geral</button>
+        <button onclick="exportPanelPdf()">📄 PDF Painel</button>
+      </div>
+      <div class="modal-actions">
+        <button style="background:#555" onclick="closeModal('optionsModal')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="configModal">
+    <div class="modal">
+      <h3 id="configTitle">Configurar item</h3>
+      <div class="modal-grid">
+        <div style="grid-column:1 / span 2;"><input id="cfgName" class="input" placeholder="Nome do registro" /></div>
+        <div>
+          <select id="cfgColor" class="select">
+            <option value="#007bff">Azul</option>
+            <option value="#28a745">Verde</option>
+            <option value="#fd7e14">Laranja</option>
+            <option value="#8e44ad">Roxo</option>
+            <option value="#dc3545">Vermelho</option>
+            <option value="#20c997">Turquesa</option>
+          </select>
+        </div>
+        <div id="targetWrap"><input id="cfgTarget" class="input" placeholder="Meta (00:00:00)" inputmode="numeric" /></div>
+        <div id="targetHint" style="grid-column:1 / span 2; margin-top:-2px;" class="small-muted">Digite só números e o formato será montado automaticamente como hora:minuto:segundo, da direita para a esquerda.</div>
+        <div id="durationWrap" style="display:none;"><input id="cfgDuration" class="input" placeholder="Duração (00:00:00)" inputmode="numeric" /></div>
+        <div id="durationHint" style="display:none;grid-column:1 / span 2; margin-top:-2px;" class="small-muted">Para regressivo, informe a duração total. Ex.: 000500 vira 00:05:00.</div>
+        <div style="grid-column:1 / span 2;"><textarea id="cfgNotes" placeholder="Observações"></textarea></div>
+      </div>
+      <div class="modal-actions">
+        <button style="background:#555" onclick="closeModal('configModal')">Cancelar</button>
+        <button style="background:var(--green)" onclick="saveConfig()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="menuModal">
+    <div class="modal">
+      <h3 id="menuTitle">Opções do item</h3>
+      <div class="menu-list">
+        <button onclick="openConfigFromMenu()">✏️ Editar</button>
+        <button onclick="duplicateFromMenu()">⧉ Duplicar</button>
+        <button onclick="shareItemFromMenu()">💬 Compartilhar</button>
+        <button onclick="exportItemCsvFromMenu()">⬇ Exportar CSV</button>
+        <button onclick="openFullscreenFromMenu()">🖥 Tela cheia</button>
+        <button onclick="removeFromMenu()" style="color:#ff8a8a;">🗑 Remover</button>
+      </div>
+      <div class="modal-actions">
+        <button style="background:#555" onclick="closeModal('menuModal')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="fullscreen-overlay" id="fullscreenOverlay">
+    <div class="modal" style="max-width:560px; margin:0 auto; min-height:100%; background:#1e1e1e;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
+        <div style="font-weight:800; font-size:1.05rem;">Tela cheia</div>
+        <button class="icon-btn" style="background:#555;" onclick="closeFullscreen()">✕</button>
+      </div>
+      <div id="fullscreenCard"></div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'multi_cronometro_v7';
+    const LEGACY_KEY = 'multi_cronometro_v6';
+
+    const state = {
+      stopwatches: [],
+      countdowns: [],
+      nextId: 1,
+      activeModule: 'stopwatch',
+      layoutMode: 1,
+      sortMode: { stopwatch:'manual', countdown:'manual' },
+      selectedCompare: [],
+      activeMenuContext: null,
+      editingContext: null,
+      fullscreenContext: null,
+      dragContext: null
+    };
+
+    function getCurrentModuleForLists(){
+      return state.activeModule === 'countdown' ? 'countdown' : 'stopwatch';
+    }
+    function getList(module){
+      return module === 'countdown' ? state.countdowns : state.stopwatches;
+    }
+    function getItemByContext(ctx){
+      if(!ctx) return null;
+      return getList(ctx.module).find(x => x.id === ctx.id) || null;
+    }
+
+    function format(ms){
+      const totalMs = Math.max(0, Math.floor(ms || 0));
+      const mins = Math.floor(totalMs / 60000);
+      const secs = Math.floor((totalMs % 60000) / 1000);
+      const msPart = totalMs % 1000;
+      return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}.${String(msPart).padStart(3,'0')}`;
+    }
+    function formatHMS(ms){
+      const totalSeconds = Math.max(0, Math.floor((ms || 0) / 1000));
+      const hh = Math.floor(totalSeconds / 3600);
+      const mm = Math.floor((totalSeconds % 3600) / 60);
+      const ss = totalSeconds % 60;
+      return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+    }
+    function formatTargetInput(raw){
+      const digits = String(raw || '').replace(/\D/g,'').slice(-6);
+      if(!digits) return '';
+      const p = digits.padStart(6,'0');
+      return `${p.slice(0,2)}:${p.slice(2,4)}:${p.slice(4,6)}`;
+    }
+    function parseTimeToMs(text){
+      const v = String(text || '').trim();
+      if(!v) return null;
+      let m = v.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+      if(m) return (+m[1] * 3600000) + (+m[2] * 60000) + (+m[3] * 1000);
+      m = v.match(/^(\d{1,2}):(\d{2})\.(\d{1,3})$/);
+      if(m) return (+m[1] * 60000) + (+m[2] * 1000) + (+m[3].padEnd(3,'0').slice(0,3));
+      return null;
+    }
+    function escapeHtml(text){
+      return String(text ?? '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+    function csvEscape(v){
+      return String(v ?? '').replace(/;/g, ',').replace(/[\r\n]+/g, ' ');
+    }
+    function sanitizeFilename(name){
+      const base = String(name || 'arquivo')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .replace(/[^a-zA-Z0-9_-]+/g,'_')
+        .replace(/_+/g,'_')
+        .replace(/^_|_$/g,'');
+      return base || 'arquivo';
+    }
+    function downloadBlob(blob, fileName){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1200);
+    }
+
+    function nowElapsed(t){
+      return (t.elapsed || 0) + (t.running ? (Date.now() - t.start) : 0);
+    }
+    function nowRemaining(c){
+      const remaining = (c.remaining || 0) - (c.running ? (Date.now() - c.start) : 0);
+      return Math.max(0, remaining);
+    }
+    function elapsedCountdown(c){
+      return Math.max(0, (c.durationMs || 0) - nowRemaining(c));
+    }
+
+    function computeStopwatchStats(t){
+      const splits = t.laps.map(l => l.split);
+      if(!splits.length) return { avg:0, best:0, worst:0, laps:0 };
+      const sum = splits.reduce((a,b) => a+b, 0);
+      return { avg: sum / splits.length, best: Math.min(...splits), worst: Math.max(...splits), laps: splits.length };
+    }
+    function computeCountdownStats(c){
+      return {
+        marks: c.checkpoints.length,
+        remaining: nowRemaining(c),
+        elapsed: elapsedCountdown(c),
+        duration: c.durationMs || 0
+      };
+    }
+    function evaluateStopwatchTarget(t){
+      if(!t.targetMs) return { label:'Sem meta', cls:'status-none', basis:'' };
+      const base = t.laps.length ? t.laps[0].split : nowElapsed(t);
+      const pct = base / t.targetMs;
+      const basis = t.laps.length ? 'comparando última volta' : 'comparando total';
+      if(pct <= 1) return { label:'Meta atendida', cls:'status-ok', basis };
+      if(pct <= 1.05) return { label:'Próximo da meta', cls:'status-near', basis };
+      return { label:'Acima da meta', cls:'status-bad', basis };
+    }
+    function evaluateCountdownStatus(c){
+      if(c.finished || nowRemaining(c) <= 0){
+        return { label:'Finalizado', cls:'status-bad', basis:'tempo zerado' };
+      }
+      if(c.running){
+        return { label:'Em andamento', cls:'status-run', basis:'contando regressivamente' };
+      }
+      return { label:'Pausado', cls:'status-none', basis:'aguardando início' };
+    }
+    function rankingStopwatchIds(){
+      const withLaps = state.stopwatches.filter(t => t.laps.length > 0);
+      if(withLaps.length < 2) return { best:null, worst:null };
+      const ranked = [...withLaps].sort((a,b) => computeStopwatchStats(a).avg - computeStopwatchStats(b).avg);
+      return { best: ranked[0].id, worst: ranked[ranked.length - 1].id };
+    }
+
+    function createStopwatch(name){
+      return {
+        id: state.nextId++,
+        name: name || `Registro ${state.stopwatches.length + 1}`,
+        running:false,
+        start:0,
+        elapsed:0,
+        laps:[],
+        lastLapMark:0,
+        color:'#007bff',
+        targetMs:null,
+        notes:''
+      };
+    }
+    function createCountdown(name){
+      return {
+        id: state.nextId++,
+        name: name || `Regressivo ${state.countdowns.length + 1}`,
+        running:false,
+        start:0,
+        durationMs:5 * 60 * 1000,
+        remaining:5 * 60 * 1000,
+        checkpoints:[],
+        color:'#fd7e14',
+        notes:'',
+        finished:false,
+        lastBeepAt:0
+      };
+    }
+
+    function persist(){
+      const snapshot = {
+        nextId: state.nextId,
+        layoutMode: state.layoutMode,
+        sortMode: state.sortMode,
+        stopwatches: state.stopwatches.map(t => ({ ...t, running:false, start:0, elapsed: nowElapsed(t) })),
+        countdowns: state.countdowns.map(c => ({ ...c, running:false, start:0, remaining: nowRemaining(c), finished: nowRemaining(c) <= 0 ? true : c.finished }))
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    }
+
+    function restore(){
+      try{
+        let raw = localStorage.getItem(STORAGE_KEY);
+        if(raw){
+          const data = JSON.parse(raw);
+          state.nextId = data.nextId || 1;
+          state.layoutMode = data.layoutMode || 1;
+          state.sortMode = Object.assign({ stopwatch:'manual', countdown:'manual' }, data.sortMode || {});
+          state.stopwatches.splice(0, state.stopwatches.length, ...((data.stopwatches || []).map(t => ({ ...t, running:false, start:0, laps: Array.isArray(t.laps) ? t.laps : [] }))));
+          state.countdowns.splice(0, state.countdowns.length, ...((data.countdowns || []).map(c => ({ ...c, running:false, start:0, checkpoints: Array.isArray(c.checkpoints) ? c.checkpoints : [], finished: !!c.finished }))));
+          return true;
+        }
+        raw = localStorage.getItem(LEGACY_KEY);
+        if(raw){
+          const legacy = JSON.parse(raw);
+          state.nextId = legacy.nextId || 1;
+          state.layoutMode = legacy.layoutMode || 1;
+          state.sortMode = { stopwatch: legacy.sortMode || 'manual', countdown:'manual' };
+          state.stopwatches.splice(0, state.stopwatches.length, ...((legacy.timers || []).map(t => ({ ...t, running:false, start:0, laps: Array.isArray(t.laps) ? t.laps : [] }))));
+          return true;
+        }
+        return false;
+      }catch(err){
+        console.error(err);
+        return false;
+      }
+    }
+
+    function applyLayoutClass(){
+      document.body.classList.remove('layout-1','layout-2','layout-6');
+      document.body.classList.add(state.layoutMode === 6 ? 'layout-6' : (state.layoutMode === 2 ? 'layout-2' : 'layout-1'));
+    }
+
+    function setModule(module){
+      state.activeModule = module;
+      document.body.classList.toggle('mode-compare', module === 'compare');
+      document.getElementById('tabStopwatch').classList.toggle('active', module === 'stopwatch');
+      document.getElementById('tabCountdown').classList.toggle('active', module === 'countdown');
+      document.getElementById('tabCompare').classList.toggle('active', module === 'compare');
+      render();
+    }
+    function setLayout(n){
+      state.layoutMode = n;
+      applyLayoutClass();
+      persist();
+      render();
+      closeModal('optionsModal');
+    }
+
+    function openModal(id){ const el = document.getElementById(id); if(el) el.style.display = 'flex'; }
+    function closeModal(id){ const el = document.getElementById(id); if(el) el.style.display = 'none'; }
+    function openOptions(){ openModal('optionsModal'); }
+
+    function attachMasks(){
+      ['cfgTarget','cfgDuration'].forEach(id => {
+        const el = document.getElementById(id);
+        if(!el || el.dataset.maskBound === '1') return;
+        el.dataset.maskBound = '1';
+        el.addEventListener('input', e => { e.target.value = formatTargetInput(e.target.value); });
+      });
+    }
+
+    function setConfigMode(module){
+      const isCountdown = module === 'countdown';
+      document.getElementById('targetWrap').style.display = isCountdown ? 'none' : 'block';
+      document.getElementById('targetHint').style.display = isCountdown ? 'none' : 'block';
+      document.getElementById('durationWrap').style.display = isCountdown ? 'block' : 'none';
+      document.getElementById('durationHint').style.display = isCountdown ? 'block' : 'block';
+      document.getElementById('durationHint').style.display = isCountdown ? 'block' : 'none';
+    }
+
+    function quickAdd(){
+      if(state.activeModule === 'countdown'){
+        const c = createCountdown();
+        state.countdowns.push(c);
+        persist();
+        render();
+        openConfig({ module:'countdown', id:c.id });
+      } else {
+        const t = createStopwatch();
+        state.stopwatches.push(t);
+        persist();
+        render();
+        openConfig({ module:'stopwatch', id:t.id });
+      }
+    }
+
+    function openConfig(context = null){
+      const module = context ? context.module : getCurrentModuleForLists();
+      state.editingContext = context;
+      const item = context ? getItemByContext(context) : null;
+      setConfigMode(module);
+      const title = module === 'countdown' ? (context ? 'Editar regressivo' : 'Novo regressivo') : (context ? 'Editar cronômetro' : 'Novo cronômetro');
+      document.getElementById('configTitle').innerText = title;
+      document.getElementById('cfgName').value = item ? item.name : (module === 'countdown' ? `Regressivo ${state.countdowns.length + 1}` : `Registro ${state.stopwatches.length + 1}`);
+      document.getElementById('cfgColor').value = item ? item.color : (module === 'countdown' ? '#fd7e14' : '#007bff');
+      document.getElementById('cfgTarget').value = item && module === 'stopwatch' && item.targetMs ? formatHMS(item.targetMs) : '';
+      document.getElementById('cfgDuration').value = item && module === 'countdown' ? formatHMS(item.durationMs || item.remaining || 0) : '';
+      document.getElementById('cfgNotes').value = item ? (item.notes || '') : '';
+      attachMasks();
+      openModal('configModal');
+    }
+
+    function saveConfig(){
+      const context = state.editingContext;
+      const module = context ? context.module : getCurrentModuleForLists();
+      const name = document.getElementById('cfgName').value.trim() || (module === 'countdown' ? `Regressivo ${state.countdowns.length + 1}` : `Registro ${state.stopwatches.length + 1}`);
+      const color = document.getElementById('cfgColor').value;
+      const notes = document.getElementById('cfgNotes').value.trim();
+      const targetMs = parseTimeToMs(document.getElementById('cfgTarget').value);
+      const durationMs = parseTimeToMs(document.getElementById('cfgDuration').value);
+
+      if(module === 'countdown'){
+        if(!durationMs || durationMs <= 0){
+          alert('Informe uma duração válida para o regressivo.');
+          return;
+        }
+      }
+
+      if(context){
+        const item = getItemByContext(context);
+        if(item){
+          item.name = name;
+          item.color = color;
+          item.notes = notes;
+          if(module === 'stopwatch'){
+            item.targetMs = targetMs;
+          } else {
+            const wasRunning = item.running;
+            const currentRemaining = nowRemaining(item);
+            const currentElapsed = Math.max(0, (item.durationMs || 0) - currentRemaining);
+            item.durationMs = durationMs;
+            item.remaining = Math.max(0, durationMs - Math.min(currentElapsed, durationMs));
+            item.running = false;
+            item.start = 0;
+            item.finished = item.remaining <= 0 ? true : false;
+            if(wasRunning && item.remaining > 0){
+              item.running = true;
+              item.start = Date.now();
+            }
+          }
+        }
+      } else {
+        if(module === 'stopwatch'){
+          const t = createStopwatch(name);
+          t.color = color;
+          t.targetMs = targetMs;
+          t.notes = notes;
+          state.stopwatches.push(t);
+        } else {
+          const c = createCountdown(name);
+          c.color = color;
+          c.durationMs = durationMs;
+          c.remaining = durationMs;
+          c.notes = notes;
+          state.countdowns.push(c);
+        }
+      }
+      persist();
+      closeModal('configModal');
+      render();
+    }
+
+    function updateItemName(module, id, value){
+      const item = getList(module).find(x => x.id === id);
+      if(item){
+        item.name = value.trim() || (module === 'countdown' ? `Regressivo ${id}` : `Registro ${id}`);
+        persist();
+      }
+    }
+
+    function toggleStopwatch(id){
+      const t = state.stopwatches.find(x => x.id === id);
+      if(!t) return;
+      if(t.running){
+        t.elapsed += Date.now() - t.start;
+        t.running = false;
+      } else {
+        t.start = Date.now();
+        t.running = true;
+      }
+      persist();
+      render();
+    }
+    function lapStopwatch(id){
+      const t = state.stopwatches.find(x => x.id === id);
+      if(!t) return;
+      const current = nowElapsed(t);
+      const split = current - t.lastLapMark;
+      if(current <= 0 || split <= 0) return;
+      t.laps.unshift({
+        number: t.laps.length + 1,
+        total: current,
+        split,
+        stamp: new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' })
+      });
+      t.lastLapMark = current;
+      persist();
+      render();
+    }
+    function resetStopwatch(id){
+      const t = state.stopwatches.find(x => x.id === id);
+      if(!t) return;
+      t.running = false;
+      t.start = 0;
+      t.elapsed = 0;
+      t.laps = [];
+      t.lastLapMark = 0;
+      persist();
+      render();
+    }
+
+    function toggleCountdown(id){
+      const c = state.countdowns.find(x => x.id === id);
+      if(!c) return;
+      if(c.finished && nowRemaining(c) <= 0){
+        c.finished = false;
+        c.remaining = c.durationMs;
+      }
+      if(c.running){
+        c.remaining = nowRemaining(c);
+        c.running = false;
+        c.start = 0;
+      } else if(nowRemaining(c) > 0){
+        c.start = Date.now();
+        c.running = true;
+      }
+      persist();
+      render();
+    }
+    function checkpointCountdown(id){
+      const c = state.countdowns.find(x => x.id === id);
+      if(!c) return;
+      const remaining = nowRemaining(c);
+      const elapsed = elapsedCountdown(c);
+      c.checkpoints.unshift({
+        number: c.checkpoints.length + 1,
+        remaining,
+        elapsed,
+        stamp: new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' })
+      });
+      persist();
+      render();
+    }
+    function resetCountdown(id){
+      const c = state.countdowns.find(x => x.id === id);
+      if(!c) return;
+      c.running = false;
+      c.start = 0;
+      c.remaining = c.durationMs;
+      c.checkpoints = [];
+      c.finished = false;
+      c.lastBeepAt = 0;
+      persist();
+      render();
+    }
+
+    function startAll(){
+      if(state.activeModule === 'countdown'){
+        state.countdowns.forEach(c => {
+          if(c.finished && nowRemaining(c) <= 0){ c.finished = false; c.remaining = c.durationMs; }
+          if(!c.running && nowRemaining(c) > 0){ c.start = Date.now(); c.running = true; }
+        });
+      } else {
+        const now = Date.now();
+        state.stopwatches.forEach(t => { if(!t.running){ t.start = now; t.running = true; } });
+      }
+      persist();
+      render();
+    }
+    function pauseAll(){
+      if(state.activeModule === 'countdown'){
+        state.countdowns.forEach(c => {
+          if(c.running){ c.remaining = nowRemaining(c); c.running = false; c.start = 0; }
+        });
+      } else {
+        const now = Date.now();
+        state.stopwatches.forEach(t => { if(t.running){ t.elapsed += now - t.start; t.running = false; } });
+      }
+      persist();
+      render();
+    }
+    function resetAll(){
+      if(state.activeModule === 'countdown'){
+        state.countdowns.forEach(c => {
+          c.running = false; c.start = 0; c.remaining = c.durationMs; c.checkpoints = []; c.finished = false; c.lastBeepAt = 0;
+        });
+      } else {
+        state.stopwatches.forEach(t => {
+          t.running = false; t.start = 0; t.elapsed = 0; t.laps = []; t.lastLapMark = 0;
+        });
+      }
+      persist();
+      render();
+    }
+
+    function openMenu(module, id){
+      state.activeMenuContext = { module, id };
+      document.getElementById('menuTitle').textContent = module === 'countdown' ? 'Opções do regressivo' : 'Opções do cronômetro';
+      openModal('menuModal');
+    }
+    function openConfigFromMenu(){ closeModal('menuModal'); openConfig(state.activeMenuContext); }
+    function removeFromMenu(){
+      const ctx = state.activeMenuContext;
+      if(!ctx) return;
+      const list = getList(ctx.module);
+      const idx = list.findIndex(x => x.id === ctx.id);
+      if(idx >= 0){
+        list.splice(idx,1);
+        if(ctx.module === 'stopwatch') state.selectedCompare = state.selectedCompare.filter(x => x !== ctx.id);
+        if(state.fullscreenContext && state.fullscreenContext.module === ctx.module && state.fullscreenContext.id === ctx.id) closeFullscreen();
+        persist();
+        render();
+      }
+      closeModal('menuModal');
+    }
+    function duplicateFromMenu(){
+      const ctx = state.activeMenuContext;
+      if(!ctx) return;
+      const item = getItemByContext(ctx);
+      if(!item) return;
+      if(ctx.module === 'stopwatch'){
+        const copy = createStopwatch(`${item.name} - Cópia`);
+        copy.color = item.color;
+        copy.targetMs = item.targetMs;
+        copy.notes = item.notes;
+        state.stopwatches.push(copy);
+      } else {
+        const copy = createCountdown(`${item.name} - Cópia`);
+        copy.color = item.color;
+        copy.notes = item.notes;
+        copy.durationMs = item.durationMs;
+        copy.remaining = item.durationMs;
+        state.countdowns.push(copy);
+      }
+      persist();
+      render();
+      closeModal('menuModal');
+    }
+
+    function buildStopwatchSummary(t){
+      const s = computeStopwatchStats(t);
+      const ev = evaluateStopwatchTarget(t);
+      return [
+        '📄 DADOS TÉCNICOS',
+        `🏷️ *Registro:* ${t.name}`,
+        `🎯 *Meta:* ${t.targetMs ? formatHMS(t.targetMs) : 'Não definida'}`,
+        `⏱️ *Tempo atual:* ${format(nowElapsed(t))}`,
+        `🔁 *Voltas:* ${s.laps}`,
+        `• Média: ${s.laps ? format(s.avg) : '--:--.---'}`,
+        `• Melhor: ${s.laps ? format(s.best) : '--:--.---'}`,
+        `• Pior: ${s.laps ? format(s.worst) : '--:--.---'}`,
+        `📊 *Status:* ${ev.label}`,
+        t.notes ? `📝 *Observação:* ${t.notes}` : ''
+      ].filter(Boolean).join('\n');
+    }
+    function buildCountdownSummary(c){
+      const s = computeCountdownStats(c);
+      const ev = evaluateCountdownStatus(c);
+      return [
+        '📄 DADOS TÉCNICOS',
+        `🏷️ *Regressivo:* ${c.name}`,
+        `⏳ *Duração:* ${formatHMS(s.duration)}`,
+        `⌛ *Restante:* ${formatHMS(s.remaining)}`,
+        `▶️ *Decorrido:* ${formatHMS(s.elapsed)}`,
+        `📍 *Marcas:* ${s.marks}`,
+        `📊 *Status:* ${ev.label}`,
+        c.notes ? `📝 *Observação:* ${c.notes}` : ''
+      ].filter(Boolean).join('\n');
+    }
+
+    function shareItemFromMenu(){
+      const ctx = state.activeMenuContext;
+      const item = getItemByContext(ctx);
+      if(!item) return;
+      const msg = ctx.module === 'countdown' ? buildCountdownSummary(item) : buildStopwatchSummary(item);
+      if(navigator.share){
+        navigator.share({ title:item.name, text:msg }).catch(() => {});
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      }
+    }
+    function exportItemCsvFromMenu(){
+      const ctx = state.activeMenuContext;
+      const item = getItemByContext(ctx);
+      if(!item) return;
+      let rows = [];
+      if(ctx.module === 'countdown'){
+        rows = ['Registro;Marca;Restante;Decorrido;Horario', ...item.checkpoints.map((mark, idx) => `${csvEscape(item.name)};${item.checkpoints.length - idx};${formatHMS(mark.remaining)};${formatHMS(mark.elapsed)};${csvEscape(mark.stamp)}`)];
+      } else {
+        rows = ['Registro;Volta;Tempo Total;Tempo Volta;Horario', ...item.laps.map((lap, idx) => `${csvEscape(item.name)};${item.laps.length - idx};${format(lap.total)};${format(lap.split)};${csvEscape(lap.stamp)}`)];
+      }
+      downloadBlob(new Blob([rows.join('\r\n')], { type:'text/csv;charset=utf-8;' }), `${sanitizeFilename(item.name)}.csv`);
+      closeModal('menuModal');
+    }
+
+    function buildGlobalSummaryText(){
+      const lines = ['📄 RESUMO EXECUTIVO'];
+      if(state.stopwatches.length){
+        lines.push('', 'CRONÔMETROS');
+        state.stopwatches.forEach((t, idx) => {
+          const s = computeStopwatchStats(t);
+          lines.push(`${idx + 1}. ${t.name} • Atual: ${format(nowElapsed(t))} • Voltas: ${s.laps} • Média: ${s.laps ? format(s.avg) : '--:--.---'}`);
+        });
+      }
+      if(state.countdowns.length){
+        lines.push('', 'REGRESSIVOS');
+        state.countdowns.forEach((c, idx) => {
+          const s = computeCountdownStats(c);
+          lines.push(`${idx + 1}. ${c.name} • Restante: ${formatHMS(s.remaining)} • Duração: ${formatHMS(s.duration)} • Marcas: ${s.marks}`);
+        });
+      }
+      if(lines.length === 1) lines.push('Sem dados disponíveis.');
+      return lines.join('\n');
+    }
+    function shareGlobalSummary(){
+      const msg = buildGlobalSummaryText();
+      if(navigator.share){
+        navigator.share({ title:'Resumo Multi Cronômetro', text:msg }).catch(() => {});
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      }
+      closeModal('optionsModal');
+    }
+
+    function exportGlobalCsv(){
+      const rows = ['Modulo;Registro;Tempo Atual/Restante;Voltas/Marcas;Media/Decorrido;Melhor/Duracao;Pior;Meta;Status;Observacoes'];
+      state.stopwatches.forEach(t => {
+        const s = computeStopwatchStats(t);
+        const ev = evaluateStopwatchTarget(t);
+        rows.push([
+          'Cronometro', csvEscape(t.name), format(nowElapsed(t)), s.laps,
+          s.laps ? format(s.avg) : '', s.laps ? format(s.best) : '', s.laps ? format(s.worst) : '',
+          t.targetMs ? formatHMS(t.targetMs) : '', ev.label, csvEscape(t.notes || '')
+        ].join(';'));
+      });
+      state.countdowns.forEach(c => {
+        const s = computeCountdownStats(c);
+        const ev = evaluateCountdownStatus(c);
+        rows.push([
+          'Regressivo', csvEscape(c.name), formatHMS(s.remaining), s.marks,
+          formatHMS(s.elapsed), formatHMS(s.duration), '', '', ev.label, csvEscape(c.notes || '')
+        ].join(';'));
+      });
+      downloadBlob(new Blob([rows.join('\r\n')], { type:'text/csv;charset=utf-8;' }), 'multi_cronometro_global_v17.csv');
+      closeModal('optionsModal');
+    }
+
+    async function exportPanelPdf(){
+      try{
+        const canvas = await html2canvas(document.body, { scale:2, backgroundColor:'#121212', useCORS:true, logging:false });
+        const img = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p','mm','a4');
+        const w = pdf.internal.pageSize.getWidth();
+        const h = pdf.internal.pageSize.getHeight();
+        const ratio = canvas.width / canvas.height;
+        let rw = w, rh = w / ratio;
+        if(rh > h){ rh = h; rw = h * ratio; }
+        pdf.addImage(img, 'PNG', (w - rw) / 2, 0, rw, rh, undefined, 'FAST');
+        pdf.save('multi_cronometro_painel_v17.pdf');
+      }catch(e){
+        console.error(e);
+        alert('Erro ao gerar PDF do painel.');
+      }
+    }
+
+    function sortCurrentList(mode){
+      const module = getCurrentModuleForLists();
+      state.sortMode[module] = mode;
+      const list = getList(module);
+      if(mode === 'name'){
+        list.sort((a,b) => a.name.localeCompare(b.name, 'pt-BR'));
+      } else if(mode === 'metric'){
+        if(module === 'countdown'){
+          list.sort((a,b) => nowRemaining(a) - nowRemaining(b));
+        } else {
+          list.sort((a,b) => {
+            const av = a.laps.length ? computeStopwatchStats(a).avg : Number.POSITIVE_INFINITY;
+            const bv = b.laps.length ? computeStopwatchStats(b).avg : Number.POSITIVE_INFINITY;
+            return av - bv;
+          });
+        }
+      }
+      persist();
+      render();
+      closeModal('optionsModal');
+    }
+
+    function toggleCompare(id, checked){
+      if(checked){
+        if(state.selectedCompare.length >= 3){
+          alert('Selecione no máximo 3 cronômetros para comparar.');
+          const cb = document.querySelector(`input[data-compare-id="${id}"]`);
+          if(cb) cb.checked = false;
+          return;
+        }
+        if(!state.selectedCompare.includes(id)) state.selectedCompare.push(id);
+      } else {
+        state.selectedCompare = state.selectedCompare.filter(x => x !== id);
+      }
+      renderComparePanel();
+    }
+    function renderComparePanel(){
+      if(state.activeModule !== 'compare') return;
+      const box = document.getElementById('comparePanel');
+      if(!box) return;
+      const chosen = state.selectedCompare.map(id => state.stopwatches.find(t => t.id === id)).filter(Boolean);
+      if(chosen.length === 0){
+        box.innerHTML = '<div class="small-muted">Selecione até 3 cronômetros para comparar.</div>';
+        return;
+      }
+      const baseline = chosen
+        .map(t => ({ t, value: t.laps.length ? computeStopwatchStats(t).avg : nowElapsed(t) }))
+        .sort((a,b) => a.value - b.value);
+      const fastest = baseline[0];
+      const rows = chosen.map(t => {
+        const s = computeStopwatchStats(t);
+        const base = t.laps.length ? s.avg : nowElapsed(t);
+        const delta = fastest && fastest.value > 0 ? (((base - fastest.value) / fastest.value) * 100).toFixed(1) : '0.0';
+        return `
+          <div style="padding:8px 0; border-bottom:1px solid var(--border);">
+            <div style="font-weight:800;">${escapeHtml(t.name)}</div>
+            <div class="small-muted">Atual: ${format(nowElapsed(t))} • Voltas: ${s.laps} • Média: ${s.laps ? format(s.avg) : '--:--.---'}</div>
+            <div style="margin-top:4px;"><span class="mini-tag">Δ vs melhor: ${delta}%</span><span class="mini-tag">Base: ${format(base)}</span></div>
+          </div>
+        `;
+      }).join('');
+      const metrics = fastest ? `
+        <div class="compare-grid">
+          <div class="compare-metric"><div class="small-muted">Melhor base</div><div style="font-weight:800;margin-top:4px;">${escapeHtml(fastest.t.name)}</div><div style="margin-top:4px;font-family:monospace;">${format(fastest.value)}</div></div>
+          <div class="compare-metric"><div class="small-muted">Selecionados</div><div style="font-weight:800;margin-top:4px;">${chosen.length}</div></div>
+          <div class="compare-metric"><div class="small-muted">Critério</div><div style="font-weight:800;margin-top:4px;">Média das voltas / tempo atual</div></div>
+        </div>
+      ` : '';
+      box.innerHTML = rows + metrics;
+    }
+
+    function setupDrag(){
+      const rows = document.querySelectorAll('[data-item-id]');
+      rows.forEach(row => {
+        const handle = row.querySelector('.drag-handle');
+        if(!handle) return;
+        row.setAttribute('draggable', true);
+        row.addEventListener('dragstart', () => {
+          state.dragContext = { module: row.dataset.module, id: parseInt(row.dataset.itemId, 10) };
+          row.classList.add('dragging');
+        });
+        row.addEventListener('dragend', () => {
+          row.classList.remove('dragging');
+          state.dragContext = null;
+        });
+        row.addEventListener('dragover', e => e.preventDefault());
+        row.addEventListener('drop', e => {
+          e.preventDefault();
+          if(!state.dragContext) return;
+          const targetModule = row.dataset.module;
+          const targetId = parseInt(row.dataset.itemId, 10);
+          if(state.dragContext.module === targetModule && state.dragContext.id !== targetId){
+            moveItem(targetModule, state.dragContext.id, targetId);
+          }
+        });
+        handle.addEventListener('touchstart', () => {
+          state.dragContext = { module: row.dataset.module, id: parseInt(row.dataset.itemId, 10) };
+          row.classList.add('dragging');
+        }, { passive:true });
+        handle.addEventListener('touchend', e => {
+          row.classList.remove('dragging');
+          const touch = e.changedTouches[0];
+          const el = document.elementFromPoint(touch.clientX, touch.clientY);
+          const target = el ? el.closest('[data-item-id]') : null;
+          if(target && state.dragContext && target.dataset.module === state.dragContext.module){
+            const targetId = parseInt(target.dataset.itemId, 10);
+            if(targetId !== state.dragContext.id) moveItem(target.dataset.module, state.dragContext.id, targetId);
+          }
+          state.dragContext = null;
+        }, { passive:true });
+      });
+    }
+    function moveItem(module, fromId, toId){
+      const list = getList(module);
+      const fromIdx = list.findIndex(t => t.id === fromId);
+      const toIdx = list.findIndex(t => t.id === toId);
+      if(fromIdx < 0 || toIdx < 0) return;
+      const [moved] = list.splice(fromIdx, 1);
+      list.splice(toIdx, 0, moved);
+      state.sortMode[module] = 'manual';
+      persist();
+      render();
+    }
+
+    function renderStopwatchLaps(t){
+      if(!t.laps.length) return '<div class="empty">Ainda não há voltas registradas</div>';
+      return `
+        <div class="lap-head"><div>#</div><div>Total</div><div>Volta</div><div style="text-align:right;">Meta</div></div>
+        ${t.laps.map((lap, idx) => {
+          const lapStatus = t.targetMs ? (lap.split <= t.targetMs ? 'status-ok' : (lap.split <= t.targetMs * 1.05 ? 'status-near' : 'status-bad')) : 'status-none';
+          const lapLabel = t.targetMs ? (lap.split <= t.targetMs ? 'OK' : (lap.split <= t.targetMs * 1.05 ? 'Próx' : 'Acima')) : '—';
+          return `<div class="lap-row"><div class="lap-idx">#${t.laps.length - idx}</div><div class="lap-total">${format(lap.total)}</div><div class="lap-split">${format(lap.split)}</div><div class="lap-meta"><span class="status-chip ${lapStatus}">${lapLabel}</span></div></div>`;
+        }).join('')}
+      `;
+    }
+    function renderCountdownMarks(c){
+      if(!c.checkpoints.length) return '<div class="empty">Ainda não há marcas registradas</div>';
+      return `
+        <div class="lap-head"><div>#</div><div>Restante</div><div>Decorrido</div><div style="text-align:right;">Hora</div></div>
+        ${c.checkpoints.map((mark, idx) => `<div class="lap-row"><div class="lap-idx">#${c.checkpoints.length - idx}</div><div class="lap-total">${formatHMS(mark.remaining)}</div><div class="lap-split">${formatHMS(mark.elapsed)}</div><div class="lap-meta"><span class="status-chip status-none">${escapeHtml(mark.stamp)}</span></div></div>`).join('')}
+      `;
+    }
+
+    function buildStopwatchCard(t, rank, compareOnly=false){
+      const stats = computeStopwatchStats(t);
+      const total = nowElapsed(t);
+      const ev = evaluateStopwatchTarget(t);
+      return `
+        <div class="card ${rank.best === t.id ? 'best' : ''} ${rank.worst === t.id ? 'worst' : ''}" data-module="stopwatch" data-item-id="${t.id}" style="border-left-color:${t.color || '#007bff'};">
+          <div class="card-header">
+            <div class="drag-handle" title="Arrastar">☰</div>
+            <div class="compare-check"><input type="checkbox" data-compare-id="${t.id}" onchange="toggleCompare(${t.id}, this.checked)" ${state.selectedCompare.includes(t.id) ? 'checked' : ''}><span class="small-muted">Comparar</span></div>
+            <input class="card-title" value="${escapeHtml(t.name)}" oninput="updateItemName('stopwatch', ${t.id}, this.value)" />
+            <div class="header-actions"><button class="icon-btn" onclick="openMenu('stopwatch', ${t.id})">⋮</button></div>
+          </div>
+          <div class="timer" id="stopwatch-${t.id}" style="color:${t.color};">${format(total)}</div>
+          <div class="timer-meta"><span class="status-chip ${ev.cls}">${ev.label}${ev.basis ? ` • ${ev.basis}` : ''}</span></div>
+          ${compareOnly ? `<div class="small-muted" style="text-align:center;">Voltas: ${stats.laps} • Média: ${stats.laps ? format(stats.avg) : '--:--.---'}</div>` : `
+            <div class="stats">
+              <div class="stat"><span class="stat-label">Voltas</span><span class="stat-value">${stats.laps}</span></div>
+              <div class="stat"><span class="stat-label">Média</span><span class="stat-value">${stats.laps ? format(stats.avg) : '--:--.---'}</span></div>
+              <div class="stat"><span class="stat-label">Melhor</span><span class="stat-value">${stats.laps ? format(stats.best) : '--:--.---'}</span></div>
+              <div class="stat"><span class="stat-label">Meta</span><span class="stat-value">${t.targetMs ? formatHMS(t.targetMs) : '--:--:--'}</span></div>
+            </div>
+            <div class="small-muted" style="margin:-2px 0 10px; text-align:center;">${t.notes ? escapeHtml(t.notes) : 'Sem observação'}</div>
+            <div class="controls">
+              <button class="${t.running ? 'pause' : 'start'}" onclick="toggleStopwatch(${t.id})">${t.running ? 'Pause' : 'Start'}</button>
+              <button class="lap" onclick="lapStopwatch(${t.id})">Lap</button>
+              <button class="reset" onclick="resetStopwatch(${t.id})">Reset</button>
+            </div>
+            <div class="laps">${renderStopwatchLaps(t)}</div>
+          `}
+        </div>
+      `;
+    }
+
+    function buildCountdownCard(c){
+      const stats = computeCountdownStats(c);
+      const ev = evaluateCountdownStatus(c);
+      return `
+        <div class="card" data-module="countdown" data-item-id="${c.id}" style="border-left-color:${c.color || '#fd7e14'};">
+          <div class="card-header">
+            <div class="drag-handle" title="Arrastar">☰</div>
+            <input class="card-title" value="${escapeHtml(c.name)}" oninput="updateItemName('countdown', ${c.id}, this.value)" />
+            <div class="header-actions"><button class="icon-btn" onclick="openMenu('countdown', ${c.id})">⋮</button></div>
+          </div>
+          <div class="timer" id="countdown-${c.id}" style="color:${c.color};">${formatHMS(stats.remaining)}</div>
+          <div class="timer-meta"><span class="status-chip ${ev.cls}">${ev.label}${ev.basis ? ` • ${ev.basis}` : ''}</span></div>
+          <div class="stats">
+            <div class="stat"><span class="stat-label">Duração</span><span class="stat-value">${formatHMS(stats.duration)}</span></div>
+            <div class="stat"><span class="stat-label">Restante</span><span class="stat-value">${formatHMS(stats.remaining)}</span></div>
+            <div class="stat"><span class="stat-label">Decorrido</span><span class="stat-value">${formatHMS(stats.elapsed)}</span></div>
+            <div class="stat"><span class="stat-label">Marcas</span><span class="stat-value">${stats.marks}</span></div>
+          </div>
+          <div class="small-muted" style="margin:-2px 0 10px; text-align:center;">${c.notes ? escapeHtml(c.notes) : 'Sem observação'}</div>
+          <div class="controls">
+            <button class="${c.running ? 'pause' : 'start'}" onclick="toggleCountdown(${c.id})">${c.running ? 'Pause' : (c.finished ? 'Reiniciar' : 'Start')}</button>
+            <button class="checkpoint" onclick="checkpointCountdown(${c.id})">Marca</button>
+            <button class="reset" onclick="resetCountdown(${c.id})">Reset</button>
+          </div>
+          <div class="laps">${renderCountdownMarks(c)}</div>
+        </div>
+      `;
+    }
+
+    function renderFullscreenCard(){
+      const ctx = state.fullscreenContext;
+      const wrap = document.getElementById('fullscreenCard');
+      if(!ctx || !wrap) return;
+      const item = getItemByContext(ctx);
+      if(!item){ wrap.innerHTML = ''; return; }
+      if(ctx.module === 'countdown'){
+        wrap.innerHTML = buildCountdownCard(item);
+      } else {
+        wrap.innerHTML = buildStopwatchCard(item, rankingStopwatchIds(), false);
+      }
+    }
+    function openFullscreenFromMenu(){
+      state.fullscreenContext = state.activeMenuContext ? { ...state.activeMenuContext } : null;
+      closeModal('menuModal');
+      document.getElementById('fullscreenOverlay').style.display = 'block';
+      renderFullscreenCard();
+    }
+    function closeFullscreen(){
+      document.getElementById('fullscreenOverlay').style.display = 'none';
+      state.fullscreenContext = null;
+    }
+
+    function beep(){
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.value = 0.03;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        setTimeout(() => { osc.stop(); ctx.close(); }, 180);
+      }catch(e){ console.log('Beep indisponível', e); }
+    }
+
+    function handleCountdownFinish(c){
+      const remaining = nowRemaining(c);
+      if(c.running && remaining <= 0){
+        c.running = false;
+        c.start = 0;
+        c.remaining = 0;
+        c.finished = true;
+        if(!c.lastBeepAt || Date.now() - c.lastBeepAt > 1000){
+          c.lastBeepAt = Date.now();
+          beep();
+        }
+        persist();
+        render();
+      }
+    }
+
+    function render(){
+      const container = document.getElementById('container');
+      if(!container) return;
+      container.innerHTML = '';
+      if(state.activeModule === 'compare'){
+        const panel = document.createElement('div');
+        panel.className = 'summary-box';
+        panel.id = 'comparePanel';
+        panel.innerHTML = '<div class="small-muted">Selecione até 3 cronômetros para comparar.</div>';
+        container.appendChild(panel);
+        const rank = rankingStopwatchIds();
+        state.stopwatches.forEach(t => {
+          const wrap = document.createElement('div');
+          wrap.innerHTML = buildStopwatchCard(t, rank, true).trim();
+          container.appendChild(wrap.firstElementChild);
+        });
+        setupDrag();
+        renderComparePanel();
+        renderFullscreenCard();
+        return;
+      }
+      if(state.activeModule === 'countdown'){
+        state.countdowns.forEach(c => {
+          const wrap = document.createElement('div');
+          wrap.innerHTML = buildCountdownCard(c).trim();
+          container.appendChild(wrap.firstElementChild);
+        });
+        if(!state.countdowns.length){
+          container.innerHTML = '<div class="card" style="border-left-color:var(--orange);"><div class="small-muted">Nenhum regressivo cadastrado. Use o botão + para criar o primeiro.</div></div>';
+        }
+      } else {
+        const rank = rankingStopwatchIds();
+        state.stopwatches.forEach(t => {
+          const wrap = document.createElement('div');
+          wrap.innerHTML = buildStopwatchCard(t, rank, false).trim();
+          container.appendChild(wrap.firstElementChild);
+        });
+        if(!state.stopwatches.length){
+          container.innerHTML = '<div class="card"><div class="small-muted">Nenhum cronômetro cadastrado. Use o botão + para criar o primeiro.</div></div>';
+        }
+      }
+      setupDrag();
+      renderFullscreenCard();
+    }
+
+    function tick(){
+      state.stopwatches.forEach(t => {
+        if(t.running){
+          const el = document.getElementById(`stopwatch-${t.id}`);
+          if(el) el.textContent = format(nowElapsed(t));
+        }
+      });
+      state.countdowns.forEach(c => {
+        if(c.running){
+          handleCountdownFinish(c);
+          const el = document.getElementById(`countdown-${c.id}`);
+          if(el) el.textContent = formatHMS(nowRemaining(c));
+        }
+      });
+      if(state.activeModule === 'compare') renderComparePanel();
+      if(state.fullscreenContext) renderFullscreenCard();
+      requestAnimationFrame(tick);
+    }
+
+    document.addEventListener('click', (e) => {
+      ['optionsModal','configModal','menuModal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if(e.target === modal) closeModal(id);
+      });
+      if(e.target === document.getElementById('fullscreenOverlay')) closeFullscreen();
+    });
+
+    attachMasks();
+    applyLayoutClass();
+    if(!restore()){
+      state.stopwatches.push(createStopwatch('Registro 1'));
+      state.countdowns.push(createCountdown('Regressivo 1'));
+      persist();
+    }
+    applyLayoutClass();
+    render();
+    tick();
+  </script>
+</body>
+</html>
