@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cronoanálise Pro</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        /* Tema Dark Industrial - Tela Mobile */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --border: #333333;
+            --green: #28a745;
+            --red: #dc3545;
+            --blue: #007bff;
+            --yellow: #ffc107;
+            --orange: #fd7e14;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            padding: 8px; 
+            margin: 0; 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            touch-action: manipulation; 
+            user-select: none; 
+            -webkit-user-select: none;
+            padding-bottom: 110px;
+        }
+        
+        #print-wrapper { display: flex; flex-direction: column; gap: 0; width: 100%; }
+
+        .card { background: var(--card-bg); padding: 12px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .input-group { display: flex; flex-direction: column; }
+        .full-width { grid-column: span 2; }
+        
+        label { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; margin-bottom: 4px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        
+        input, select { 
+            width: 100%; box-sizing: border-box; font-size: 1rem; padding: 6px; 
+            border: 1px solid var(--border); border-radius: 6px; background: #2a2a2a; 
+            color: white; text-align: center; font-weight: bold;
+        }
+        input:focus, select:focus { outline: 2px solid var(--blue); }
+
+        .live-timer { font-size: 2.8rem; font-weight: bold; text-align: center; font-variant-numeric: tabular-nums; margin: 5px 0 10px 0; font-family: monospace; color: #fff;}
+        
+        .btn-row { display: flex; gap: 6px; margin-bottom: 10px;}
+        button { border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.1s;}
+        button:active:not(:disabled) { transform: scale(0.95); }
+        button:disabled { opacity: 0.4; pointer-events: none; }
+        
+        .btn-start { flex: 1; padding: 12px 2px; background-color: var(--green); font-size: 0.9rem;}
+        .btn-stop { flex: 1; padding: 12px 2px; background-color: var(--orange); font-size: 0.9rem;}
+        .btn-reset { flex: 1; padding: 12px 2px; background-color: var(--red); font-size: 0.9rem;}
+
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .result-box { background: #2a2a2a; padding: 10px 8px; border-radius: 8px; text-align: center; border: 1px solid var(--border); position: relative; }
+        .result-title { font-size: 0.65rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; margin-bottom: 2px; display: block;}
+        
+        .info-icon { 
+            background: rgba(255,255,255,0.1); color: var(--text-muted); border-radius: 50%; 
+            width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; 
+            font-size: 0.7rem; cursor: pointer; position: absolute; top: 4px; right: 4px; 
+            font-family: serif; font-style: italic; font-weight: bold;
+        }
+        
+        .result-value { display: block; font-size: 1.3rem; font-weight: bold; margin-top: 4px; }
+        
+        .text-green { color: var(--green) !important; }
+        .text-red { color: var(--red) !important; }
+        .text-yellow { color: var(--yellow) !important; }
+        .text-blue { color: #4dabf7 !important; }
+
+        /* Estilos de tela para o Histórico */
+        .history-container { max-height: 150px; overflow-y: auto; margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; background: #1a1a1a;}
+        .history-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 0.85rem;}
+        .history-row:last-child { border-bottom: none; }
+        .history-id { width: 30px; font-weight: bold; color: var(--text-muted);}
+        .history-time { flex: 1; text-align: center; font-weight: bold; font-family: monospace; font-size: 1rem;}
+        .btn-delete { background: transparent; color: var(--red); padding: 4px 12px; border: 1px solid var(--red); font-size: 0.75rem;}
+
+        .print-only-history { display: none; }
+
+        /* Gráficos */
+        .chart-title { font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-top: 6px; margin-bottom: 5px; text-transform: uppercase; text-align: center;}
+
+/* Relatório (export-mode): levantar os títulos dos gráficos */
+body.export-mode .chart-title{
+  margin-top: 6px !important;   /* antes era 15px na regra global */
+  margin-bottom: 4px !important;
+}
+
+        
+        .chart-wrapper { height: 110px; display: flex; align-items: flex-end; gap: 4px; position: relative; border-bottom: 2px solid var(--border); border-left: 2px solid var(--border); margin-bottom: 15px;}
+        .chart-bar { flex: 1; background-color: var(--blue); border-top-left-radius: 3px; border-top-right-radius: 3px; min-width: 8px; transition: height 0.3s ease; position: relative;}
+        .chart-bar.over-takt { background-color: var(--red); }
+        .chart-bar.under-takt { background-color: var(--green); }
+        
+        .takt-line { position: absolute; left: 0; right: 0; height: 2px; background-color: var(--yellow); z-index: 10;}
+        .takt-label { position: absolute; right: 0; color: var(--yellow); font-size: 0.65rem; font-weight: bold; transform: translateY(-110%);}
+        
+        .avg-line { position: absolute; left: 0; right: 0; height: 1px; border-top: 2px dashed #ffffff; z-index: 9;}
+        .avg-label { position: absolute; left: 0; color: #ffffff; font-size: 0.65rem; font-weight: bold; transform: translateY(-120%);}
+
+        /* Histograma */
+        .histogram-wrapper { height: 110px; display: flex; align-items: flex-end; gap: 2px; border-bottom: 2px solid var(--border); border-left: 2px solid var(--border); padding-top: 15px; margin-bottom: 25px;}
+        .hist-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative;}
+        .hist-bar { width: 90%; background-color: var(--blue); border-top-left-radius: 3px; border-top-right-radius: 3px; transition: height 0.3s ease;}
+.hist-label { font-size: 0.65rem; color: #fff; margin-bottom: 2px; font-weight: bold;}
+        .hist-x-label { font-size: 0.5rem; color: var(--text-muted); position: absolute; bottom: -18px; white-space: nowrap;}
+
+        .btn-export { width: 100%; padding: 10px; background-color: var(--text-muted); color: var(--bg-color); margin-top: 10px; font-size: 0.9rem;}
+        .btn-pdf { width: 100%; padding: 10px; background-color: #e2e2e2; color: #121212; margin-top: 10px; font-size: 0.9rem;}
+
+        .fixed-bottom { position: fixed; bottom: 0; left: 0; right: 0; padding: 10px; background: linear-gradient(transparent, var(--bg-color) 30%); z-index: 50;}
+        .btn-lap { width: 100%; padding: 20px; font-size: 1.8rem; background-color: var(--blue); border-radius: 10px; box-shadow: 0 5px 0 #0056b3; }
+        .btn-lap:active:not(:disabled) { transform: translateY(5px); box-shadow: none; }
+        .lap-obs-input { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: white; font-size: 0.9rem; margin-bottom: 6px; display: none; }
+        .lap-obs-input::placeholder { color: var(--text-muted); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px;}
+        .modal-content { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center;}
+        .modal-title { font-size: 1.2rem; font-weight: bold; color: var(--blue); margin-bottom: 10px;}
+        .modal-text { font-size: 0.95rem; color: #ddd; margin-bottom: 20px; line-height: 1.4; text-align: left;}
+        .btn-close-modal { background: var(--blue); color: white; padding: 12px 20px; font-size: 1rem; width: 100%; border-radius: 8px; border: none; font-weight: bold; text-transform: uppercase; cursor: pointer;}
+        .btn-close-modal:active { transform: scale(0.96); }
+
+        .branding { text-align: center; margin-top: 20px; margin-bottom: 30px; font-size: 0.85rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 4px;}
+        .linkedin-link { color: #0a66c2; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; vertical-align: middle; font-weight: bold;}
+        .linkedin-link svg { width: 14px; height: 14px; fill: currentColor; transform: translateY(-1px);}
+
+        /* ELEMENTOS EXCLUSIVOS DO EXPORT */
+        .print-header { display: none; }
+        .print-summary { display: none; }
+        .print-executive-summary { display: none; }
+
+        /* ======== CLASSE EXPORT-MODE (Substitui o @media print) ======== */
+        body.export-mode {
+            background: white !important;
+            color: #222 !important;
+            width: 794px !important; /* A4 Retrato a 96DPI */
+            padding: 0 !important;
+        }
+
+        .export-mode #exportContainer {
+            width: 794px !important;
+            min-height: 1123px !important;
+            padding: 24px 28px !important;
+            box-sizing: border-box !important;
+            background: white !important;
+        }
+
+        .export-mode .card {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin-bottom: 10px !important;
+        }
+
+        .export-mode #configForm, 
+        .export-mode .live-timer, 
+        .export-mode .btn-row, 
+        .export-mode .fixed-bottom, 
+        .export-mode .info-icon, 
+        .export-mode .btn-delete, 
+        .export-mode #actionButtons,
+        .export-mode .branding { 
+            display: none !important; 
+        }
+
+        .export-mode #print-wrapper {
+            display: flex !important; flex-direction: row !important;
+            gap: 16px !important; align-items: flex-start !important; width: 100% !important;
+        }
+        .export-mode .col-1 { width: 44% !important; flex-shrink: 0 !important; }
+        .export-mode .col-2 { flex: 1 !important; min-width: 0 !important; }
+
+        .export-mode .print-summary { display: grid !important; grid-template-columns: 1fr 1fr; gap: 3px 12px; margin-bottom: 8px; font-size: 8.5pt; background: #f8f9fa; padding: 8px 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .export-mode .print-executive-summary { display: block !important; font-size: 7.5pt; font-style: italic; color: #444; margin-bottom: 8px; padding: 6px 9px; border-left: 3px solid var(--blue); background: #f4f4f4; line-height: 1.3; }
+
+        .export-mode .text-muted, .export-mode label { color: #555 !important; }
+        .export-mode .result-title { color: #444 !important; font-size: 7pt !important; }
+        .export-mode .result-box { background: #f8f9fa !important; border: 1px solid #ddd !important; padding: 6px !important; }
+        .export-mode .result-value { font-size: 12pt !important; color: #000 !important; }
+
+        .export-mode .text-green { color: #28a745 !important; }
+        .export-mode .text-red { color: #dc3545 !important; }
+        .export-mode .text-yellow { color: #d39e00 !important; }
+        .export-mode .text-blue { color: #007bff !important; }
+
+        .export-mode .chart-wrapper, .export-mode .histogram-wrapper { border-color: #333 !important; height: 130px !important; margin-bottom: 14px !important; background-color: #f4f4f4 !important; }
+        .export-mode .chart-bar, .export-mode .hist-bar { min-height: 2px !important; }
+        .export-mode .chart-bar.over-takt { border: 1px solid #000 !important; }
+        .export-mode .chart-bar.under-takt { border: 1px solid #666 !important; }
+        .export-mode .takt-line { background-color: #000 !important; height: 1px !important; }
+        .export-mode .takt-label { color: #000 !important; font-size: 7.5pt !important; }
+        .export-mode .avg-line { border-top: 1px dashed #333 !important; }
+        .export-mode .avg-label { color: #333 !important; font-size: 7.5pt !important; }
+        .export-mode .hist-label { color: #000 !important; font-size: 7pt !important; }
+        .export-mode .hist-x-label { color: #333 !important; font-size: 7pt !important; }
+
+        .export-mode .print-header { display: flex !important; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 7px; margin-bottom: 10px; width: 100%; }
+        .export-mode .print-header h1 { margin: 0; font-size: 13pt; color: #222; }
+        .export-mode .print-header p { margin: 0; font-size: 8pt; color: #555; line-height: 1.5; }
+
+        .export-mode #historyListScreen { display: none !important; }
+        .export-mode #historyCard { width: 100% !important; margin-top: 8px !important; border-top: 1px solid #ccc !important; padding-top: 10px !important; display: block !important; }
+
+        /* 7 colunas compactas — 20 amostras em 3 linhas */
+        .export-mode .print-only-history {
+            display: grid !important;
+            grid-template-columns: repeat(7, 1fr) !important;
+            gap: 4px 8px !important;
+            background: white !important; border: none !important; width: 100% !important;
+        }
+        .export-mode .history-row {
+            border-bottom: 1px solid #eee !important;
+            padding: 2px 2px !important;
+            color: #000 !important;
+            font-size: 8pt !important;
+        }
+    
+.app-version { position: absolute; top: 8px; right: 10px; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); opacity: 0.9; pointer-events: none; }
+body.export-mode .app-version { display: none !important; }
+
+.info-inline { position: static !important; top: auto !important; right: auto !important; margin-left: 6px; display: inline-flex; vertical-align: middle; transform: translateY(-1px); }
+.label-with-info { display: inline-flex; align-items: center; gap: 6px; }
+
+.sample-label { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); font-size: 0.55rem; font-weight: bold; color: #fff; opacity: 0.9; display: none; pointer-events: none; }
+body.export-mode .sample-label { display: block; color: #000; font-size: 7pt; opacity: 0.95; }
+
+/* Indicadores do Histograma (Média e Takt) */
+.histogram-wrapper { position: relative; }
+.hist-vline { position: absolute; top: 10px; bottom: 18px; width: 0; pointer-events: none; z-index: 20; }
+.hist-vline.mean { border-left: 2px dashed #ffffff; }
+.hist-vline.takt { border-left: 1px solid var(--yellow); }
+.hist-vlabel { position: absolute; top: 0; font-size: 0.6rem; font-weight: bold; white-space: nowrap; pointer-events: none; z-index: 21; transform: translate(-50%, -110%); }
+.hist-vlabel.mean { color: #ffffff; }
+.hist-vlabel.takt { color: var(--yellow); }
+.hist-takt-summary { position: absolute; top: 2px; right: 4px; font-size: 0.65rem; font-weight: bold; color: var(--text-muted); background: rgba(0,0,0,0.25); padding: 2px 6px; border-radius: 6px; }
+body.export-mode .hist-takt-summary { color: #333; background: rgba(255,255,255,0.7); }
+body.export-mode .hist-vline.mean { border-left: 2px dashed #000 !important; }
+body.export-mode .hist-vlabel.mean { color: #000 !important; }
+body.export-mode .hist-vline.takt { border-left: 1px solid #000 !important; }
+body.export-mode .hist-vlabel.takt { color: #000 !important; }
+
+
+/* === PADRÃO ÚNICO PARA TODOS OS ÍCONES DE INFORMAÇÃO (bolinha + símbolo minúsculo itálico) === */
+:root{
+  --info-size: 18px;
+  --info-font: 0.72rem;
+}
+
+.info-icon{
+  width: var(--info-size) !important;
+  height: var(--info-size) !important;
+  min-width: var(--info-size) !important;
+  min-height: var(--info-size) !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: serif !important;
+  font-style: italic !important;
+  font-weight: 700 !important;
+  font-size: var(--info-font) !important;
+  line-height: 1 !important;
+  background: rgba(255,255,255,0.10) !important;
+  color: var(--text-muted) !important;
+}
+
+.info-icon.info-inline{
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  margin-left: 6px !important;
+  vertical-align: middle !important;
+  transform: translateY(-1px) !important;
+}
+
+.label-with-info{
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+/* Ajuste de espaçamento no relatório: empurra o Histograma para baixo */
+.export-mode #chartContainer + .chart-title { margin-top: 60px !important; }
+
+
+/* ===== v1.94 — Ajuste solicitado: altura dos gráficos + respiro para títulos/labels ===== */
+/* App (tela): aumentar altura dos gráficos */
+.chart-wrapper{ height: 140px !important; }
+.histogram-wrapper{ height: 140px !important; }
+
+/* Evita sobreposição entre título do gráfico e textos (TAKT/MÉDIA) */
+.chart-title{ margin-bottom: 12px !important; }
+
+/* Histograma: cria área superior interna para as referências e reposiciona os textos */
+.histogram-wrapper{ padding-top: 34px !important; }
+.hist-vline{ top: 34px !important; }
+.hist-vlabel{ top: 8px !important; transform: translate(-50%, 0) !important; }
+
+
+/* ===== v1.95 — Ajuste solicitado: empilhar labels para evitar aglomeração (TAKT/MÉDIA) ===== */
+.hist-vlabel.mean{ top: 6px !important; }
+.hist-vlabel.takt{ top: 22px !important; }
+
+
+/* ===== v2.0 — Ajuste solicitado: número das barras do histograma na base ===== */
+.hist-label{ 
+  position: absolute !important;
+  bottom: 2px !important;
+  margin-bottom: 0 !important;
+  z-index: 5 !important;
+  pointer-events: none;
+}
+/* garante contraste no relatório */
+body.export-mode .hist-label{ 
+  position: absolute !important;
+  bottom: 2px !important;
+}
+</style>
+</head>
+<body>
+<div class="app-version" id="appVersion">v2.1</div>
+
+<div id="exportContainer">
+
+    <div class="print-header">
+        <div>
+            <h1>Relatório de Cronoanálise de Processos</h1>
+            <p>Documento de controle de estabilidade e tempo padrão.</p>
+        </div>
+        <div style="text-align: right;">
+            <p><strong>Data:</strong> <span id="printDate">--/--/----</span></p>
+            <p><strong>Analista:</strong> <span id="printAnalyst">—</span></p>
+        </div>
+    </div>
+
+    <div id="print-wrapper">
+        <div class="col-1">
+            <div class="card" id="configForm">
+                <div class="config-grid">
+                    <div class="input-group full-width">
+                        <label>Equipamento / Operação</label>
+                        <input type="text" id="equipName" placeholder="Ex: Torno CNC, Montagem..." >
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Analista Responsável</label>
+                        <input type="text" id="analystName" placeholder="Nome de quem está medindo..." >
+                    </div>
+                    <div class="input-group">
+                        <label class="label-with-info">Peças / Ciclo <span class="info-icon info-inline" onclick="showInfo('pecas_ciclo')">!</span></label>
+                        <input type="number" id="units" value="1" min="1" inputmode="numeric" oninput="syncTargets('units')">
+                    </div>
+                    <div class="input-group">
+                        <label>Medida de Capacidade</label>
+                        <select id="timeUnit" onchange="changeTimeUnit()">
+                            <option value="3600">Por Hora (un/h)</option>
+                            <option value="60">Por Minuto (un/min)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="label-with-info">Takt Time (s) <span class="info-icon info-inline" onclick="showInfo('takt')">!</span></label>
+                        <input type="number" id="takt" placeholder="Opcional" inputmode="numeric" oninput="syncTargets('takt')">
+                    </div>
+                    <div class="input-group">
+                        <label id="lblTarget" class="label-with-info"><span id="lblTargetText">Meta (un/h)</span> <span class="info-icon info-inline" onclick="showInfo('meta')">!</span></label>
+                        <input type="number" id="target" placeholder="Opcional" inputmode="numeric" oninput="syncTargets('target')">
+                    </div>
+                </div>
+            </div>
+
+            <div class="print-summary">
+                <div><strong>Equipamento/Operação:</strong> <span id="printEquipName">—</span></div>
+                <div><strong>Peças/Ciclo:</strong> <span id="printUnits">—</span></div>
+                <div><strong>Capacidade Medida:</strong> <span id="printTimeUnit">—</span></div>
+                <div><strong>Takt Time:</strong> <span id="printTakt">—</span></div>
+                <div><strong>Meta de Produção:</strong> <span id="printTarget">—</span></div>
+            </div>
+
+            <div class="print-executive-summary" id="printExecutiveSummary">—</div>
+
+            <div class="card">
+                <div class="btn-row">
+                    <button id="btnStart" class="btn-start" onclick="startTimer()">▶ Iniciar</button>
+                    <button id="btnStop" class="btn-stop" onclick="stopTimer()" disabled>⏸ Pausar</button>
+                    <button id="btnReset" class="btn-reset" onclick="resetTimer()">⏹ Zerar</button>
+                </div>
+
+                <div class="live-timer" id="liveTimer">00:00.00</div>
+
+                <div class="results-grid">
+                    <div class="result-box">
+                        <span class="info-icon" onclick="showInfo('amostras')">!</span>
+                        <div class="result-title">AMOSTRAS (n)</div>
+                        <span id="valSamples" class="result-value">0</span>
+                    </div>
+                    <div class="result-box">
+                        <span class="info-icon" onclick="showInfo('capacidade')">!</span>
+                        <div class="result-title" id="lblCapTitle">CAPACIDADE (un/h)</div>
+                        <span id="valHourlyCap" class="result-value text-blue">0</span>
+                    </div>
+                    <div class="result-box">
+                        <span class="info-icon" onclick="showInfo('ultimo')">!</span>
+                        <div class="result-title">ÚLTIMO CICLO</div>
+                        <span id="valLastCycle" class="result-value">0.00s</span>
+                    </div>
+                    <div class="result-box">
+                        <span class="info-icon" onclick="showInfo('medio')">!</span>
+                        <div class="result-title">CICLO MÉDIO</div>
+                        <span id="valAvgCycle" class="result-value text-yellow">0.00s</span>
+                    </div>
+                    <div class="result-box">
+                        <span class="info-icon" onclick="showInfo('minimo')">!</span>
+                        <div class="result-title">MÍNIMO</div>
+                        <span id="valMinCycle" class="result-value text-green">0.00s</span>
+                    </div>
+                    <div class="result-box">
+                        <span class="info-icon" onclick="showInfo('maximo')">!</span>
+                        <div class="result-title">MÁXIMO</div>
+                        <span id="valMaxCycle" class="result-value text-red">0.00s</span>
+                    </div>
+                    <div class="result-box">
+                        <span class="info-icon" onclick="showInfo('desvio')">!</span>
+                        <div class="result-title">DESVIO PADRÃO</div>
+                        <span id="valStdDev" class="result-value">0.00s</span>
+                    </div>
+                    <div class="result-box">
+                        <span class="info-icon" onclick="showInfo('estabilidade')">!</span>
+                        <div class="result-title">ÍNDICE DE ESTABIL.</div>
+                        <span id="valEstabilidade" class="result-value">100.0%</span>
+                    </div>
+                    <div class="result-box full-width">
+                        <span class="info-icon" onclick="showInfo('eficiencia')">!</span>
+                        <div class="result-title">EFICIÊNCIA (%)</div>
+                        <span id="valEfficiency" class="result-value">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-2">
+            <div class="card">
+                <div class="chart-title">Curva de Controle de Ciclos <span class="info-icon info-inline" onclick="showInfo('curva_controle')">!</span></div>
+                <div class="chart-wrapper" id="chartContainer"></div>
+                
+                <div class="chart-title">Histograma (Distribuição) <span class="info-icon info-inline" onclick="showInfo('histograma')">!</span></div>
+                <div class="histogram-wrapper" id="histogramContainer"></div>
+            </div>
+        </div>
+    </div> 
+
+    <div class="card" id="historyCard">
+        <div class="history-container" id="historyListScreen"></div>
+        <div class="history-container print-only-history" id="historyListPrint"></div>
+
+        <div class="config-grid" id="actionButtons" style="margin-top: 6px; grid-template-columns: 1fr 1fr 1fr 1fr;">
+            <button id="btnExport" class="btn-export" onclick="exportToExcel()" disabled style="font-size:0.8rem;">⬇ CSV</button>
+            <button id="btnPNG" class="btn-pdf" onclick="generatePNG()" disabled style="background:#17a2b8; color:white; font-size:0.8rem;">📷 PNG</button>
+            <button id="btnPDF" class="btn-pdf" onclick="generateRealPDF()" disabled style="font-size:0.8rem;">📄 PDF</button>
+            <button id="btnWhatsApp" class="btn-pdf" onclick="shareWhatsApp()" disabled style="background:#25D366; color:white; font-size:0.8rem;">💬 WhatsApp</button>
+        </div>
+    </div>
+
+</div> <div class="branding">
+    <span>Desenvolvido por <a href="https://www.linkedin.com/in/pedro-ag-portela" target="_blank" rel="noopener" class="linkedin-link"><svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg> Pedro Portela</a></span>
+    <span>Especialista de Processos Industriais & Black Belt</span>
+</div>
+
+<div class="modal-overlay" id="infoModal">
+    <div class="modal-content">
+        <div class="modal-title" id="modalTitle">Título</div>
+        <div class="modal-text" id="modalText">Texto de explicação.</div>
+        <button class="btn-close-modal" onclick="closeInfo()" style="background:var(--blue); width:100%; border:none; padding:12px; color:white; border-radius:8px; font-weight:bold; cursor:pointer;">Entendi</button>
+    </div>
+</div>
+
+<div class="fixed-bottom">
+    <input type="text" id="lapObs" class="lap-obs-input" placeholder="Observação do ciclo (opcional)..." maxlength="80">
+    <button id="btnLap" class="btn-lap" onclick="recordLap()" disabled>⏱ LAP</button>
+</div>
+
+<script>
+    let isRunning = false;
+    let lastLapTime = 0;
+    let elapsedBeforePause = 0; 
+    let laps = []; 
+    let lapCounterId = 0; 
+    let timerAnimation;
+
+    const glossario = {
+  'amostras': {
+    title: 'Amostras (n)',
+    text: 'Quantidade de medições (LAPs) válidas registradas no estudo. Quanto maior o n, maior a confiança no ciclo médio e nos indicadores.'
+  },
+  'capacidade': {
+    title: 'Capacidade',
+    text: 'Produção estimada com base no ciclo médio: capacidade = (segundos disponíveis na unidade selecionada) ÷ (ciclo médio) × (peças por ciclo).'
+  },
+  'ultimo': {
+    title: 'Último Ciclo',
+    text: 'Tempo do LAP mais recente. Útil para acompanhar variações imediatas e identificar mudanças durante a medição.'
+  },
+  'medio': {
+    title: 'Ciclo Médio',
+    text: 'Média aritmética de todos os ciclos registrados. É a principal referência para capacidade, histograma e comparação com Takt/Meta.'
+  },
+  'minimo': {
+    title: 'Mínimo',
+    text: 'Menor tempo de ciclo registrado (mais rápido). Pode indicar melhor condição do processo ou uma medição atípica.'
+  },
+  'maximo': {
+    title: 'Máximo',
+    text: 'Maior tempo de ciclo registrado (mais lento). Ajuda a identificar interrupções, retrabalhos ou instabilidade.'
+  },
+  'desvio': {
+    title: 'Desvio Padrão',
+    text: 'Mede a dispersão dos ciclos em torno da média. Quanto menor, mais repetível e previsível é o processo.'
+  },
+  'estabilidade': {
+    title: 'Índice de Estabilidade',
+    text: 'Indicador de consistência do processo: 100% − (Desvio Padrão ÷ Média × 100). Quanto mais próximo de 100%, mais repetível o processo. Abaixo de 85%: variação relevante. Abaixo de 70%: instabilidade crítica. Recomenda-se ao menos 10 amostras para resultado confiável.'
+  },
+  'eficiencia': {
+    title: 'Eficiência',
+    text: 'Relação percentual entre a capacidade projetada e a meta informada. 100% significa que a capacidade atende exatamente a meta.'
+  },
+  'takt': {
+    title: 'Takt Time (s)',
+    text: 'Ritmo necessário para atender a demanda: tempo máximo por ciclo para cumprir a necessidade. Com Takt definido, o app destaca ciclos dentro/fora do takt e mostra a referência no histograma.'
+  },
+  'meta': {
+    title: 'Meta (un/h ou un/min)',
+    text: 'Meta de produção na unidade selecionada. Ao preencher Meta, o app calcula o Takt equivalente (e vice‑versa), considerando Peças/Ciclo.'
+  },
+  'pecas_ciclo': {
+    title: 'Peças / Ciclo',
+    text: 'Quantidade de peças produzidas em cada ciclo medido. Esse valor ajusta a capacidade e influencia a conversão entre Takt e Meta.'
+  },
+  'curva_controle': {
+    title: 'Curva de Controle de Ciclos',
+    text: 'Mostra cada ciclo medido em sequência (barras). Ajuda a visualizar variação, tendência e ciclos acima/abaixo do takt (se informado).'
+  },
+  'histograma': {
+    title: 'Histograma (Distribuição)',
+    text: 'Agrupa os tempos em faixas para mostrar a frequência (quantas vezes cada faixa ocorreu). Exibe linha da média e, se houver Takt, a referência do takt e o indicador “Dentro do Takt: X/N (Y%)”.'
+  }
+};
+function showInfo(key) {
+        document.getElementById('modalTitle').innerText = glossario[key].title;
+        document.getElementById('modalText').innerText = glossario[key].text;
+        document.getElementById('infoModal').style.display = 'flex';
+    }
+
+    function closeInfo() {
+        document.getElementById('infoModal').style.display = 'none';
+    }
+
+    // ==========================================
+    // MOTOR DE GERAÇÃO REAL DE ARQUIVOS (Bypassa o Android)
+    // ==========================================
+
+    function fillPrintSummary() {
+        const equipName = document.getElementById('equipName').value.trim() || 'Não Informado';
+        const units = document.getElementById('units').value || '1';
+        const isHour = document.getElementById('timeUnit').value === '3600';
+        const timeUnitStr = isHour ? 'Por Hora (un/h)' : 'Por Minuto (un/min)';
+        const takt = document.getElementById('takt').value ? document.getElementById('takt').value + ' s' : 'Não Definido';
+        const target = document.getElementById('target').value ? document.getElementById('target').value + (isHour ? ' un/h' : ' un/min') : 'Não Definida';
+
+        document.getElementById('printEquipName').innerText = equipName;
+        document.getElementById('printUnits').innerText = units;
+        document.getElementById('printTimeUnit').innerText = timeUnitStr;
+        document.getElementById('printTakt').innerText = takt;
+        document.getElementById('printTarget').innerText = target;
+
+        if (laps.length > 0) {
+            let stats = calculateStats();
+            let capStr = document.getElementById('valHourlyCap').innerText;
+            let effStr = document.getElementById('valEfficiency').innerText;
+            
+            let text = `Estudo analítico conduzido com ${stats.n} amostras válidas. O processo apresentou um ciclo médio de ${stats.avgCycle.toFixed(2)}s, com variação entre ${stats.minTime.toFixed(2)}s (mínimo) e ${stats.maxTime.toFixed(2)}s (máximo). O Índice de Estabilidade medido foi de ${stats.estabilidade.toFixed(1)}%, projetando uma capacidade produtiva de ${capStr} ${isHour ? 'un/h' : 'un/min'}.`;
+            
+            if (effStr !== "--") {
+                text += ` A eficiência em relação à meta proposta foi de ${effStr}.`;
+            }
+            document.getElementById('printExecutiveSummary').innerText = text;
+        }
+
+        const analyst = document.getElementById('analystName').value.trim() || 'Não informado';
+        document.getElementById('printAnalyst').innerText = analyst;
+
+        let hoje = new Date();
+        document.getElementById('printDate').innerText = hoje.toLocaleDateString('pt-BR') + " às " + hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+
+    function sanitizeFilename(name) {
+        return String(name || 'arquivo')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9_-]+/g, '_')
+            .replace(/_+/g, '_')
+            .replace(/^_|_$/g, '') || 'arquivo';
+    }
+
+    
+function generateExecutiveSummary() {
+    const samples = parseInt((document.getElementById('valSamples')?.innerText || '0').replace(/[^\d]/g,'')) || 0;
+    const avg = document.getElementById('valAvgCycle')?.innerText || '0.00s';
+    const min = document.getElementById('valMinCycle')?.innerText || '0.00s';
+    const max = document.getElementById('valMaxCycle')?.innerText || '0.00s';
+    const last = document.getElementById('valLastCycle')?.innerText || '0.00s';
+    const estTxt = document.getElementById('valEstabilidade')?.innerText || '0%';
+    const eff = document.getElementById('valEfficiency')?.innerText || '--';
+    const cap = document.getElementById('valHourlyCap')?.innerText || '0';
+
+    const est = parseFloat(estTxt.replace('%','').replace(',','.')) || 0;
+
+    let stability = '';
+    if (est >= 95) stability = 'Alta estabilidade do processo.';
+    else if (est >= 85) stability = 'Boa estabilidade, com variações controladas.';
+    else if (est >= 70) stability = 'Variação relevante entre ciclos.';
+    else stability = 'Alta instabilidade do processo.';
+
+    let sampleTxt = '';
+    if (samples < 5) sampleTxt = 'Baixa amostragem.';
+    else if (samples < 10) sampleTxt = 'Amostragem moderada.';
+    else sampleTxt = 'Amostragem robusta.';
+
+    return `Ciclo médio ${avg}, variando de ${min} a ${max}, último ciclo ${last}. ${stability} Eficiência ${eff}. Capacidade ${cap}. ${sampleTxt}`;
+}
+
+
+function getExecutiveSummaryText() {
+    return generateExecutiveSummary();
+}
+
+
+    function buildWhatsAppSummary() {
+        const getText = (id, fallback='') => (document.getElementById(id)?.innerText || fallback).trim();
+        const getValue = (id, fallback='') => (document.getElementById(id)?.value ?? fallback).toString().trim();
+
+        const equipName = getValue('equipName', 'Operação não informada');
+        const analystName = getValue('analystName', 'Não informado');
+        const samples = getText('valSamples', '0');
+        const avgCycle = getText('valAvgCycle', '0.00s');
+        const minCycle = getText('valMinCycle', '0.00s');
+        const maxCycle = getText('valMaxCycle', '0.00s');
+        const lastCycle = getText('valLastCycle', '0.00s');
+        const stdDev = getText('valStdDev', '0.00s');
+        const estabilidade = getText('valEstabilidade', '0.0%');
+        const capacidade = getText('valHourlyCap', '0');
+        const eficiencia = getText('valEfficiency', '--');
+
+        const timeUnitValue = getValue('timeUnit', '60');
+        const takt = getValue('takt', '');
+        const meta = getValue('target', '');
+        const observacao = getValue('lapObs', '');
+
+        let unidadeTempo = 'un/min';
+        if (timeUnitValue === '3600') unidadeTempo = 'un/h';
+        if (timeUnitValue === '1') unidadeTempo = 'un/s';
+
+        const params = [];
+        if (takt) params.push(`• 🎯 Takt Time: ${takt}s`);
+        if (meta) params.push(`• 🎯 Meta: ${meta} ${unidadeTempo}`);
+        params.push(`• 🧭 Unidade de capacidade: ${unidadeTempo}`);
+
+        return [
+            `📄 DADOS TÉCNICOS`,
+            `🏭 *Operação:* ${equipName}`,
+            `👤 *Analista:* ${analystName}`,
+            `🔢 *Amostras registradas:* ${samples}`,
+            ``,
+            `⚙️ *Parâmetros da simulação*`,
+            ...params,
+            ``,
+            `⏱️ *Resultados da medição*`,
+            `• 🟢 Ciclo médio: ${avgCycle}`,
+            `• 🟢 Mínimo: ${minCycle}`,
+            `• 🔴 Máximo: ${maxCycle}`,
+            `• 🔵 Último ciclo: ${lastCycle}`,
+            `• 📏 Desvio padrão: ${stdDev}`,
+            ``,
+            `📊 *Indicadores*`,
+            `• ⚡ Capacidade: ${capacidade} ${unidadeTempo}`,
+            `• 📈 Estabilidade: ${estabilidade}`,
+            `• 🎯 Eficiência: ${eficiencia}`,
+            ``,
+            `📝 *RESUMO:*`,
+            `${getExecutiveSummaryText() || 'Resumo automático não disponível.'}`
+        ].join('\n');
+    }
+
+
+    function dataUrlToBlob(dataUrl) {
+        const parts = dataUrl.split(',');
+        const mime = parts[0].match(/:(.*?);/)[1];
+        const byteString = atob(parts[1]);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], { type: mime });
+    }
+
+    async function shareWhatsApp() {
+        const btn = document.getElementById('btnWhatsApp');
+        const oldText = btn.innerText;
+        btn.innerText = "⏳ Gerando...";
+        btn.disabled = true;
+
+        try {
+            const equipName = document.getElementById('equipName').value.trim() || 'Operação não informada';
+            const safeBase = sanitizeFilename(equipName || 'cronoanalise');
+            const shareText = buildWhatsAppSummary();
+            const imgData = await generateImageData(30);
+            const pngBlob = dataUrlToBlob(imgData);
+            const pngFile = new File([pngBlob], `Cronoanalise_${safeBase}.png`, { type: 'image/png' });
+
+            if (navigator.share) {
+                try {
+                    if (!navigator.canShare || navigator.canShare({ files: [pngFile] })) {
+                        await navigator.share({
+                            title: `Cronoanálise - ${equipName}`,
+                            text: shareText,
+                            files: [pngFile]
+                        });
+                        return;
+                    }
+                } catch (shareErr) {
+                    console.warn('Compartilhamento direto com anexo não concluído.', shareErr);
+                }
+            }
+
+            const link = document.createElement('a');
+            link.download = `Cronoanalise_${safeBase}.png`;
+            link.href = imgData;
+            link.click();
+
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText + "\n\n📎 O PNG do relatório foi baixado no aparelho para anexar manualmente.")}`;
+            window.open(waUrl, '_blank');
+            alert('O WhatsApp recebeu o resumo executivo. O PNG do relatório foi baixado no aparelho para anexar manualmente.');
+        } catch (e) {
+            console.error(e);
+            alert('Erro ao preparar compartilhamento no WhatsApp.');
+        } finally {
+            btn.innerText = oldText;
+            btn.disabled = laps.length === 0;
+        }
+    }
+
+    async function prepareCapture() {
+        fillPrintSummary(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        document.body.classList.add('export-mode');
+        // Pequeno delay para o navegador aplicar o CSS antes de "tirar a foto"
+        await new Promise(r => setTimeout(r, 200));
+        return document.getElementById('exportContainer');
+    }
+
+    function restoreCapture() {
+        document.body.classList.remove('export-mode');
+    }
+
+    async function generateImageData(borderPx = 0) {
+  const container = await prepareCapture();
+  try {
+    const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    if (!borderPx || borderPx <= 0) return canvas.toDataURL('image/png');
+    const bordered = document.createElement('canvas');
+    bordered.width = canvas.width + (borderPx * 2);
+    bordered.height = canvas.height + (borderPx * 2);
+    const ctx = bordered.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, bordered.width, bordered.height);
+    ctx.drawImage(canvas, borderPx, borderPx);
+    return bordered.toDataURL('image/png');
+  } finally {
+    restoreCapture();
+  }
+}
+
+async function generatePNG() {
+        const btn = document.getElementById('btnPNG');
+        const oldText = btn.innerText;
+        btn.innerText = "⏳ Gerando...";
+        btn.disabled = true;
+
+        try {
+            const imgData = await generateImageData(30);
+            const link = document.createElement('a');
+            link.download = `Cronoanalise_${Date.now()}.png`;
+            link.href = imgData;
+            link.click();
+        } catch(e) {
+            alert("Erro ao gerar imagem.");
+        } finally {
+            btn.innerText = oldText;
+            btn.disabled = false;
+        }
+    }
+
+    async function generateRealPDF() {
+        const btn = document.getElementById('btnPDF');
+        const oldText = btn.innerText;
+        btn.innerText = "⏳ Gerando...";
+        btn.disabled = true;
+
+        try {
+            const imgData = await generateImageData(30);
+            const { jsPDF } = window.jspdf;
+            
+            // Cria um PDF deitado (Landscape) no formato A4
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            
+            const img = new Image();
+            img.src = imgData;
+            await new Promise(r => img.onload = r);
+            
+            const ratio = img.width / img.height;
+            let renderWidth = pdfWidth;
+            let renderHeight = pdfWidth / ratio;
+
+            // Ajusta se ficar maior que a altura da folha
+            if (renderHeight > pdfHeight) {
+                renderHeight = pdfHeight;
+                renderWidth = pdfHeight * ratio;
+            }
+
+            // Centraliza a imagem na folha
+            const x = (pdfWidth - renderWidth) / 2;
+            const y = (pdfHeight - renderHeight) / 2;
+
+            pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight);
+            pdf.save(`Cronoanalise_${Date.now()}.pdf`); // Baixa direto sem o Android interferir
+        } catch(e) {
+            alert("Erro ao gerar PDF.");
+        } finally {
+            btn.innerText = oldText;
+            btn.disabled = false;
+        }
+    }
+
+    // ==========================================
+    // CÁLCULOS E LÓGICA DO CRONÔMETRO
+    // ==========================================
+
+    function changeTimeUnit() {
+        let multiplier = parseInt(document.getElementById('timeUnit').value);
+        let isHour = multiplier === 3600;
+        
+        document.getElementById('lblTargetText').innerText = isHour ? "Meta (un/h)" : "Meta (un/min)";
+        document.getElementById('lblCapTitle').innerText = isHour ? "CAPACIDADE (un/h)" : "CAPACIDADE (un/min)";
+        
+        syncTargets('takt');
+        if (laps.length > 0) updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+    }
+
+    function syncTargets(source) {
+        let units = parseFloat(document.getElementById('units').value) || 1;
+        let multiplier = parseInt(document.getElementById('timeUnit').value) || 3600;
+        let taktInput = document.getElementById('takt');
+        let targetInput = document.getElementById('target');
+
+        if (source === 'takt' && taktInput.value) {
+            let t = parseFloat(taktInput.value);
+            if(t > 0) targetInput.value = Math.round((multiplier / t) * units);
+        } else if (source === 'target' && targetInput.value) {
+            let tg = parseFloat(targetInput.value);
+            if(tg > 0) taktInput.value = ((multiplier / tg) * units).toFixed(2);
+        } else if (source === 'units' || source === 'unitType') {
+            if(taktInput.value) {
+                let t = parseFloat(taktInput.value);
+                if(t > 0) targetInput.value = Math.round((multiplier / t) * units);
+            }
+        }
+    }
+
+    function formatTime(ms) {
+        let totalSeconds = ms / 1000;
+        let mins = Math.floor(totalSeconds / 60);
+        let secs = Math.floor(totalSeconds % 60);
+        let millis = Math.floor((ms % 1000) / 10);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${millis.toString().padStart(2, '0')}`;
+    }
+
+    function updateLiveTimer() {
+        if (!isRunning) return;
+        let currentTime = Date.now();
+        let diff = currentTime - lastLapTime;
+        document.getElementById('liveTimer').innerText = formatTime(diff);
+        timerAnimation = requestAnimationFrame(updateLiveTimer);
+    }
+
+    function startTimer() {
+        isRunning = true;
+        let now = Date.now();
+        lastLapTime = elapsedBeforePause > 0 ? now - elapsedBeforePause : now;
+        elapsedBeforePause = 0;
+        
+        document.getElementById('btnStart').disabled = true;
+        document.getElementById('btnStart').innerText = "▶ Iniciar";
+        document.getElementById('btnStop').disabled = false;
+        document.getElementById('btnLap').disabled = false;
+        document.getElementById('lapObs').style.display = 'block';
+
+        ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = true);
+        updateLiveTimer();
+    }
+
+    function stopTimer() {
+        if (!isRunning) return;
+        isRunning = false;
+        cancelAnimationFrame(timerAnimation);
+        elapsedBeforePause = Date.now() - lastLapTime;
+        
+        document.getElementById('btnStart').disabled = false;
+        document.getElementById('btnStart').innerText = "▶ Retomar";
+        document.getElementById('btnStop').disabled = true;
+        document.getElementById('btnLap').disabled = true;
+        document.getElementById('lapObs').style.display = 'none';
+    }
+
+    function recordLap() {
+        if (!isRunning) return;
+        let now = Date.now();
+        let rawCycleTime = (now - lastLapTime) / 1000;
+        let cycleTime = Number(rawCycleTime.toFixed(2));
+        let obs = document.getElementById('lapObs').value.trim();
+
+        lapCounterId++;
+        laps.push({ id: lapCounterId, time: cycleTime, obs: obs });
+
+        document.getElementById('lapObs').value = '';
+        lastLapTime = now;
+        elapsedBeforePause = 0;
+        updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        saveToStorage();
+    }
+
+    function deleteLap(id) {
+        laps = laps.filter(lap => lap.id !== id);
+        updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        saveToStorage();
+    }
+
+    function calculateStats() {
+        const n = laps.length;
+        if (n === 0) return null;
+        
+        const times = laps.map(l => l.time);
+        const minTime = Math.min(...times);
+        const maxTime = Math.max(...times);
+        const sum = times.reduce((acc, t) => acc + t, 0);
+        const avgCycle = sum / n;
+
+        let stdDev = 0;
+        let estabilidade = 100.0;
+
+        if (n > 1) {
+            const sumSq = times.reduce((acc, t) => acc + Math.pow(t - avgCycle, 2), 0);
+            stdDev = Math.sqrt(sumSq / (n - 1));
+            const cv = (stdDev / avgCycle) * 100;
+            estabilidade = Math.max(0, 100 - cv);
+        }
+
+        return { n, times, minTime, maxTime, avgCycle, stdDev, estabilidade };
+    }
+
+    function updateUI() {
+        let stats = calculateStats();
+        
+        if (!stats) {
+            document.getElementById('valSamples').innerText = "0";
+            ['valLastCycle', 'valMinCycle', 'valMaxCycle', 'valAvgCycle', 'valStdDev'].forEach(id => document.getElementById(id).innerText = "0.00s");
+            document.getElementById('valEstabilidade').innerText = "100.0%";
+            document.getElementById('valHourlyCap').innerText = "0";
+            document.getElementById('valEfficiency').innerText = "--";
+            
+            document.getElementById('historyListScreen').innerHTML = "";
+            document.getElementById('historyListPrint').innerHTML = "";
+            document.getElementById('chartContainer').innerHTML = "";
+            document.getElementById('histogramContainer').innerHTML = "";
+            document.getElementById('btnExport').disabled = true;
+            document.getElementById('btnPDF').disabled = true;
+            document.getElementById('btnPNG').disabled = true;
+            document.getElementById('btnWhatsApp').disabled = true;
+            return;
+        }
+
+        document.getElementById('valSamples').innerText = stats.n;
+        document.getElementById('btnExport').disabled = false;
+        document.getElementById('btnPDF').disabled = false;
+        document.getElementById('btnPNG').disabled = false;
+        document.getElementById('btnWhatsApp').disabled = false;
+
+        let takt = parseFloat(document.getElementById('takt').value) || 0;
+        let target = parseFloat(document.getElementById('target').value) || 0;
+        let units = parseFloat(document.getElementById('units').value) || 1;
+        let multiplier = parseInt(document.getElementById('timeUnit').value) || 3600;
+
+        let lastCycleTime = laps[stats.n - 1].time;
+        let elLastCycle = document.getElementById('valLastCycle');
+        elLastCycle.innerText = lastCycleTime.toFixed(2) + "s";
+        elLastCycle.className = "result-value"; 
+        if (takt > 0) elLastCycle.classList.add(lastCycleTime <= takt ? "text-green" : "text-red");
+
+        document.getElementById('valMinCycle').innerText = stats.minTime.toFixed(2) + "s";
+        document.getElementById('valMaxCycle').innerText = stats.maxTime.toFixed(2) + "s";
+        document.getElementById('valAvgCycle').innerText = stats.avgCycle.toFixed(2) + "s";
+        document.getElementById('valStdDev').innerText = stats.stdDev.toFixed(2) + "s";
+        
+        let elEst = document.getElementById('valEstabilidade');
+        elEst.innerText = stats.estabilidade.toFixed(1) + "%";
+        elEst.className = "result-value";
+        if (stats.n > 1) {
+            elEst.classList.add(stats.estabilidade >= 85 ? "text-green" : (stats.estabilidade >= 70 ? "text-yellow" : "text-red"));
+        }
+
+        let calcCapacity = (multiplier / stats.avgCycle) * units;
+        document.getElementById('valHourlyCap').innerText = Math.round(calcCapacity);
+
+        let elEff = document.getElementById('valEfficiency');
+        if (target > 0) {
+            let efficiency = (calcCapacity / target) * 100;
+            elEff.innerText = efficiency.toFixed(1) + "%";
+            elEff.className = "result-value";
+            elEff.classList.add(efficiency >= 100 ? "text-green" : (efficiency >= 85 ? "text-yellow" : "text-red"));
+        } else {
+            elEff.innerText = "--";
+            elEff.className = "result-value";
+        }
+
+        renderHistory();
+        renderChart(takt, stats.avgCycle, stats.maxTime);
+        renderHistogram(stats.minTime, stats.maxTime, stats.avgCycle, stats.n, takt);
+    }
+
+    function renderHistory() {
+        const listScreen = document.getElementById('historyListScreen');
+        const listPrint = document.getElementById('historyListPrint');
+        
+        listScreen.innerHTML = "";
+        listPrint.innerHTML = "";
+        
+        for (let i = laps.length - 1; i >= 0; i--) {
+            let row = document.createElement('div');
+            row.className = 'history-row';
+            let obsHtml = laps[i].obs ? `<span style="flex:2;font-size:0.78rem;color:var(--text-muted);text-align:left;padding-left:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${laps[i].obs}">📝 ${laps[i].obs}</span>` : `<span style="flex:2;"></span>`;
+            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s</span>${obsHtml}<button class="btn-delete" onclick="deleteLap(${laps[i].id})">🗑 Excl</button>`;
+            listScreen.appendChild(row);
+        }
+
+        for (let i = 0; i < laps.length; i++) {
+            let row = document.createElement('div');
+            row.className = 'history-row';
+            let obsText = laps[i].obs ? ` — ${laps[i].obs}` : '';
+            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s${obsText}</span>`;
+            listPrint.appendChild(row);
+        }
+    }
+
+    function renderChart(takt, avgCycle, maxTime) {
+        const chart = document.getElementById('chartContainer');
+        chart.innerHTML = "";
+        
+        if (takt > maxTime) maxTime = takt; 
+        if (maxTime === 0) maxTime = 1;
+        let chartMax = maxTime * 1.1;
+
+        if (takt > 0) {
+            let line = document.createElement('div');
+            line.className = 'takt-line';
+            line.style.bottom = `${(takt / chartMax) * 100}%`;
+            line.innerHTML = `<span class="takt-label">TAKT: ${takt}s</span>`;
+            chart.appendChild(line);
+        }
+
+        if (avgCycle > 0) {
+            let avgLine = document.createElement('div');
+            avgLine.className = 'avg-line';
+            avgLine.style.bottom = `${(avgCycle / chartMax) * 100}%`;
+            avgLine.innerHTML = `<span class="avg-label">MÉDIA: ${avgCycle.toFixed(2)}s</span>`;
+            chart.appendChild(avgLine);
+        }
+
+        laps.forEach((lap, idx) => {
+            let bar = document.createElement('div');
+            bar.className = 'chart-bar';
+            bar.style.height = `${(lap.time / chartMax) * 100}%`;
+            if (takt > 0) bar.classList.add(lap.time > takt ? 'over-takt' : 'under-takt');
+            // Número da amostra (visível apenas no relatório/exportação)
+ let lbl = document.createElement('span');
+ lbl.className = 'sample-label';
+ lbl.innerText = (idx + 1);
+ bar.appendChild(lbl);
+ chart.appendChild(bar);
+        });
+    }
+
+    function renderHistogram(minTime, maxTime, avgCycle, n, takt) {
+    const hist = document.getElementById('histogramContainer');
+    hist.innerHTML = "";
+
+    const rangeTotal = Math.max(maxTime - minTime, 0.001);
+    const clamp01 = (x) => Math.min(1, Math.max(0, x));
+
+    const placeHistLine = (value, type, label) => {
+        const pct = clamp01((value - minTime) / rangeTotal);
+        const x = pct * 100;
+        const line = document.createElement('div');
+        line.className = `hist-vline ${type}`;
+        line.style.left = `${x}%`;
+        hist.appendChild(line);
+
+        const lbl = document.createElement('div');
+        lbl.className = `hist-vlabel ${type}`;
+        lbl.style.left = `${x}%`;
+        lbl.innerText = label;
+        hist.appendChild(lbl);
+    };
+
+    const appendTaktSummary = () => {
+        if (takt && takt > 0) {
+            const dentro = laps.filter(l => l.time <= takt).length;
+            const total = n || laps.length || 0;
+            const pct = total > 0 ? Math.round((dentro / total) * 100) : 0;
+            const summary = document.createElement('div');
+            summary.className = 'hist-takt-summary';
+            summary.innerText = `Dentro do Takt: ${dentro}/${total} (${pct}%)`;
+            hist.appendChild(summary);
+        }
+    };
+
+    const drawRefs = () => {
+        if (avgCycle && avgCycle > 0) placeHistLine(avgCycle, 'mean', `MÉDIA: ${avgCycle.toFixed(2)}s`);
+        if (takt && takt > 0) placeHistLine(takt, 'takt', `TAKT: ${takt.toFixed(2)}s`);
+        appendTaktSummary();
+    };
+
+    if (n === 1 || minTime === maxTime) {
+        let col = document.createElement('div');
+        col.className = 'hist-col';
+        col.innerHTML = `<span class="hist-label">${n}</span><div class="hist-bar" style="height: 100%;"></div><span class="hist-x-label">${minTime.toFixed(1)}s</span>`;
+        hist.appendChild(col);
+        drawRefs();
+        return;
+    }
+
+    let binCount = n < 10 ? 3 : (n < 20 ? 5 : 7);
+    let binWidth = (rangeTotal * 1.01) / binCount;
+    let bins = Array(binCount).fill(0);
+
+    laps.forEach(lap => {
+        let index = Math.floor((lap.time - minTime) / binWidth);
+        if (index >= binCount) index = binCount - 1;
+        if (index < 0) index = 0;
+        bins[index]++;
+    });
+
+    let maxFreq = Math.max(...bins);
+
+    bins.forEach((freq, i) => {
+        let col = document.createElement('div');
+        col.className = 'hist-col';
+
+        if (freq > 0) {
+            let label = document.createElement('span');
+            label.className = 'hist-label';
+            label.innerText = freq;
+            col.appendChild(label);
+        }
+
+        let bar = document.createElement('div');
+        bar.className = 'hist-bar';
+        bar.style.height = maxFreq > 0 ? `${(freq / maxFreq) * 100}%` : '0%';
+        col.appendChild(bar);
+
+        let binStart = minTime + (i * binWidth);
+        let binEnd = minTime + ((i + 1) * binWidth);
+
+        let xLabel = document.createElement('span');
+        xLabel.className = 'hist-x-label';
+        xLabel.innerText = `${binStart.toFixed(1)}–${binEnd.toFixed(1)}`;
+        col.appendChild(xLabel);
+
+        hist.appendChild(col);
+    });
+
+    drawRefs();
+}
+
+function resetTimer() {
+        if(laps.length > 0 && isRunning && !confirm("Deseja parar o estudo e zerar todos os dados?")) return;
+        if(laps.length > 0 && !isRunning && !confirm("Deseja zerar todos os dados?")) return;
+
+        isRunning = false;
+        cancelAnimationFrame(timerAnimation);
+        laps = [];
+        lapCounterId = 0;
+        elapsedBeforePause = 0;
+        
+        document.getElementById('liveTimer').innerText = "00:00.00";
+        document.getElementById('btnStart').disabled = false;
+        document.getElementById('btnStart').innerText = "▶ Iniciar";
+        document.getElementById('btnStop').disabled = true;
+        document.getElementById('btnLap').disabled = true;
+        document.getElementById('lapObs').value = '';
+        document.getElementById('lapObs').style.display = 'none';
+        
+        ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = false);
+        updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        localStorage.removeItem(STORAGE_KEY);
+    }
+
+    // ==========================================
+    // PERSISTÊNCIA DE SESSÃO (localStorage)
+    // ==========================================
+    const STORAGE_KEY = 'cronoanalise_maquina_v2';
+
+    function saveToStorage() {
+        const config = {
+            equipName: document.getElementById('equipName').value,
+            analystName: document.getElementById('analystName').value,
+            units: document.getElementById('units').value,
+            timeUnit: document.getElementById('timeUnit').value,
+            takt: document.getElementById('takt').value,
+            target: document.getElementById('target').value
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ config, laps, lapCounterId }));
+    }
+
+    function loadFromStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (data.config) {
+                document.getElementById('equipName').value = data.config.equipName || '';
+                document.getElementById('analystName').value = data.config.analystName || '';
+                document.getElementById('units').value = data.config.units || '1';
+                document.getElementById('timeUnit').value = data.config.timeUnit || '3600';
+                document.getElementById('takt').value = data.config.takt || '';
+                document.getElementById('target').value = data.config.target || '';
+                changeTimeUnit();
+            }
+            if (Array.isArray(data.laps) && data.laps.length > 0) {
+                laps = data.laps;
+                lapCounterId = data.lapCounterId || laps.length;
+                updateUI();
+                document.getElementById('btnExport').disabled = false;
+                document.getElementById('btnPDF').disabled = false;
+                document.getElementById('btnPNG').disabled = false;
+                document.getElementById('btnWhatsApp').disabled = false;
+            }
+        } catch(e) {
+            console.warn('Erro ao carregar sessão salva:', e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFromStorage);
+
+    function exportToExcel() {
+        if (laps.length === 0) return;
+        let equipName = document.getElementById('equipName').value.trim() || "Nao_Identificado";
+        let safeFileName = equipName.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+        
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFEquipamento/Operacao:;" + equipName + "\n\nAmostra;Tempo de Ciclo (s);Observacao\n";
+
+        laps.forEach(function(lap, index) {
+            csvContent += `${index + 1};${String(lap.time.toFixed(2)).replace('.', ',')};${lap.obs || ''}\r\n`;
+        });
+
+        let link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", `estudo_${safeFileName}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+</body>
+</html>
