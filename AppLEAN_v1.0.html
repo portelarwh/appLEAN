@@ -410,7 +410,7 @@ body { position: relative; }
     }
 
 
-    /* ===== APP OVERLAY (tela cheia) ===== */
+    /* ===== APP OVERLAY ===== */
     #appOverlay {
         display: none;
         position: fixed;
@@ -438,24 +438,14 @@ body { position: relative; }
         background: rgba(255,255,255,0.1);
         color: #fff;
         border-radius: 8px;
-        padding: 6px 12px;
+        padding: 6px 14px;
         font-size: 0.9rem;
         font-weight: 700;
         cursor: pointer;
-        transition: background 0.15s;
     }
     #backBtn:active { background: rgba(255,255,255,0.2); }
-    #appLabel {
-        font-size: 0.88rem;
-        color: #aaa;
-        font-weight: 600;
-    }
-    #appFrame {
-        flex: 1;
-        border: none;
-        width: 100%;
-        min-height: 0;
-    }
+    #appLabel { font-size: 0.85rem; color: #aaa; font-weight: 600; }
+    #appFrame { flex: 1; border: none; width: 100%; min-height: 0; }
 
 </style>
 </head>
@@ -667,7 +657,7 @@ body { position: relative; }
         openInfo(tipo);
     }
 
-    // goTo defined below with app content
+    // goTo: defined below
 
     function openInfo(tipo) {
         const title = document.getElementById('infoTitle');
@@ -712,17 +702,17 @@ body { position: relative; }
         }
     });
 
-    // ===== APPS EMBUTIDOS =====
+    // ===== NAVEGACAO ENTRE APPS =====
     const APP_CONTENTS = {
-      maquina:    `<!DOCTYPE html>
+      maquina:     `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cronoanálise Pro</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 
     <style>
         /* Tema Dark Industrial - Tela Mobile */
@@ -2096,19 +2086,19 @@ function resetTimer() {
         link.click();
         document.body.removeChild(link);
     }
-</script>
+<\/script>
 
 </body>
 </html>`,
-      operacional:`<!DOCTYPE html>
+      operacional: `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cronoanálise Homem-Máquina</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 
     <style>
         :root {
@@ -3666,11 +3656,11 @@ function updateLiveTimer() {
         updateUI();
         updateGoalStatus();
     }
-</script>
+<\/script>
 
 </body>
 </html>`,
-      multi:      `<!DOCTYPE html>
+      multi:       `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -5707,23 +5697,23 @@ function updateLiveTimer() {
         if (delta < 0 &&  hidden) setHidden(false);
       }, { passive: true });
     })();
-  </script>
+  <\/script>
 </body>
 </html>`
     };
 
     const APP_LABELS = {
-      maquina:     '⚙️ Cronoanálise Máquina v2.2',
-      operacional: '🧍 Cronoanálise Operacional v2.2',
-      multi:       '⏱️ Multi Cronômetro'
+      maquina:     '\u2699\uFE0F Cron\u00E0n\u00E0lise M\u00E0quina v2.2',
+      operacional: '\uD83E\uDDD1 Cron\u00E0n\u00E0lise Operacional v2.2',
+      multi:       '\u23F1\uFE0F Multi Cron\u00F4metro'
     };
 
     let _blobUrl = null;
 
     function goTo(tipo) {
         const content = APP_CONTENTS[tipo];
-        if (!content) { alert('App ainda não disponível.'); return; }
-        if (_blobUrl) { URL.revokeObjectURL(_blobUrl); }
+        if (!content) { alert('Em breve!'); return; }
+        if (_blobUrl) URL.revokeObjectURL(_blobUrl);
         const blob = new Blob([content], { type: 'text/html; charset=utf-8' });
         _blobUrl = URL.createObjectURL(blob);
         document.getElementById('appFrame').src = _blobUrl;
@@ -5743,7 +5733,6 @@ function updateLiveTimer() {
 
 
 
-<!-- App overlay - iframe full screen -->
 <div id="appOverlay">
   <div id="backBar">
     <button id="backBtn" onclick="goHome()">&#8592; Voltar</button>
