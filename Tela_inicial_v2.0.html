@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cronoanálise</title>
+
+<style>
+    :root {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-main: #ffffff;
+        --text-muted: #a0a0a0;
+        --border: #333333;
+        --blue: #007bff;
+        --green: #28a745;
+        --orange: #fd7e14;
+        --purple: #8e44ad;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        height: 100vh;
+        overflow: hidden;
+        background: var(--bg-color);
+        color: var(--text-main);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 8px;
+        padding: 4px 12px 6px;
+    }
+
+    .main-wrap {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        flex: 0 1 auto;
+        min-height: 0;
+        width: 100%;
+        max-width: 420px;
+        margin: 10px auto 0;
+        padding-top: 0;
+    }
+
+    .hero {
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .title-row {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+    }
+
+    .title-row h1 {
+        margin: 0;
+        font-size: 1.85rem;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+    }
+
+    .timer-icon {
+        width: 20px;
+        height: 20px;
+        fill: var(--text-muted);
+        opacity: 0.9;
+        animation: pulseIcon 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); opacity: 0.75; }
+        50% { transform: scale(1.08); opacity: 1; }
+    }
+
+    .mini-gantt-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .mini-gantt {
+        width: 100%;
+        max-width: 260px;
+        height: 16px;
+        display: flex;
+        gap: 2px;
+        align-items: stretch;
+    }
+
+    .mini-block {
+        flex: 1;
+        border-radius: 4px;
+        opacity: 0.18;
+        transform: scaleY(0.92);
+        animation: fillPulse 2.8s infinite ease-in-out;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    .mini-block:nth-child(1) { background: var(--blue);   animation-delay: 0s;   flex: 1.2; }
+    .mini-block:nth-child(2) { background: var(--orange); animation-delay: 0.2s; flex: 0.9; }
+    .mini-block:nth-child(3) { background: var(--green);  animation-delay: 0.4s; flex: 1.5; }
+    .mini-block:nth-child(4) { background: var(--purple); animation-delay: 0.6s; flex: 0.8; }
+    .mini-block:nth-child(5) { background: var(--blue);   animation-delay: 0.8s; flex: 1.1; }
+
+    @keyframes fillPulse {
+        0%, 100% {
+            opacity: 0.18;
+            transform: scaleY(0.92);
+            filter: brightness(0.85);
+        }
+        35% {
+            opacity: 1;
+            transform: scaleY(1);
+            filter: brightness(1.08);
+        }
+    }
+
+    .mini-legend {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .menu-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.28);
+        border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .option-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .option-btn {
+        position: relative;
+        flex: 1;
+        border: none;
+        border-radius: 12px;
+        padding: 22px 14px 17px 14px;
+        font-size: 1.08rem;
+        font-weight: 700;
+        color: white;
+        cursor: pointer;
+        transition: transform 0.12s ease, opacity 0.12s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        text-align: left;
+    }
+
+    .btn-badge {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        font-size: 0.62rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.88);
+        background: rgba(0,0,0,0.18);
+        border: 1px solid rgba(255,255,255,0.16);
+        border-radius: 999px;
+        padding: 2px 6px;
+        line-height: 1.1;
+        pointer-events: none;
+    }
+
+    .option-btn:active { transform: scale(0.98); }
+
+    .btn-maquina { background: var(--blue); }
+    .btn-operacional { background: var(--green); }
+    .btn-multi { background: var(--orange); }
+    .btn-trabalho-padrao { background: var(--purple); }
+    .btn-oee { background: #0f766e; }
+
+    .info-btn {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        border-radius: 50%;
+        border: 1px solid #666;
+        background: #2a2a2a;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .info-btn:active { transform: scale(0.96); }
+
+    .branding {
+        text-align: center;
+        margin-top: 8px;
+        margin-bottom: 2px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        line-height: 1.25;
+    }
+
+    .linkedin-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #1e7be7;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    .linkedin-link svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .role-text {
+        color: var(--text-muted);
+    }
+
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.78);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 999;
+    }
+
+    .modal-content {
+        width: 100%;
+        max-width: 360px;
+        background: #1f1f1f;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .modal-title {
+        margin: 0 0 12px 0;
+        font-size: 1.05rem;
+        color: #fff;
+    }
+
+    .modal-text {
+        margin: 0;
+        color: #d0d0d0;
+        line-height: 1.45;
+        font-size: 0.95rem;
+    }
+
+    .modal-close {
+        margin-top: 16px;
+        width: 100%;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        background: var(--blue);
+        color: white;
+        cursor: pointer;
+    }
+
+/* v2.0 — badge de versão */
+body { position: relative; }
+.app-version { position: absolute; top: 6px; right: 12px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); opacity: 0.9; pointer-events: none; }
+
+
+    .trial-panel {
+        margin-top: 8px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 9px 10px 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .trial-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: rgba(253,126,20,0.16);
+        border: 1px solid rgba(253,126,20,0.38);
+        color: #ffbb80;
+        font-size: 0.74rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .trial-counter {
+        font-size: 0.98rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        color: #ffffff;
+        text-align: center;
+    }
+
+    .trial-subtext {
+        font-size: 0.75rem;
+        line-height: 1.35;
+        color: var(--text-muted);
+        text-align: center;
+        max-width: 320px;
+    }
+
+    .unlock-panel {
+        width: 100%;
+        margin-top: 4px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .unlock-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #f0f0f0;
+        text-align: center;
+    }
+
+    .unlock-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .unlock-input {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: #121212;
+        color: #ffffff;
+        border-radius: 10px;
+        padding: 10px 10px;
+        font-size: 0.95rem;
+        outline: none;
+        text-transform: uppercase;
+    }
+
+    .unlock-input::placeholder {
+        color: #777777;
+        text-transform: none;
+    }
+
+    .unlock-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        font-weight: 800;
+        background: var(--green);
+        color: #ffffff;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .unlock-msg {
+        min-height: 18px;
+        margin-top: 8px;
+        font-size: 0.8rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .unlock-msg.error { color: #ff8f8f; }
+    .unlock-msg.success { color: #8be28b; }
+
+    body.expired .option-btn,
+    body.expired .info-btn {
+        opacity: 0.55;
+    }
+
+</style>
+</head>
+<body>
+<div class="app-version" id="appVersion">v2.0</div>
+
+<div class="main-wrap">
+    <div class="hero">
+        <div class="title-row">
+            <h1>Cronoanálise</h1>
+            <svg class="timer-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 1H9v2h6V1zm-3 4a9 9 0 100 18 9 9 0 000-18zm0 16a7 7 0 110-14 7 7 0 010 14zm-.5-11h1.5v5l4 2.5-.75 1.23L11.5 15V10z"/>
+            </svg>
+        </div>
+
+        <div class="mini-gantt-wrap">
+            <div class="mini-gantt" aria-hidden="true">
+                <div class="mini-block"></div>
+                <div class="mini-block"></div>
+                <div class="mini-block"></div>
+                <div class="mini-block"></div>
+                <div class="mini-block"></div>
+            </div>
+            <div class="mini-legend">tempo • sequência • análise</div>
+        </div>
+
+        <div class="trial-panel" id="trialPanel">
+            <div class="trial-chip" id="trialStatus">App em teste</div>
+            <div class="trial-counter" id="trialCountdown">14 dias</div>
+            <div class="trial-subtext" id="trialMessage">Versão temporária liberada por 14 dias.</div>
+
+            <div class="unlock-panel" id="unlockPanel" hidden>
+                <label class="unlock-label" for="unlockPassword">Insira a senha para liberar o app</label>
+                <div class="unlock-row">
+                    <input
+                        class="unlock-input"
+                        id="unlockPassword"
+                        type="password"
+                        placeholder="Digite a senha"
+                        autocomplete="off"
+                        autocapitalize="characters"
+                        spellcheck="false"
+                    >
+                    <button class="unlock-btn" type="button" onclick="unlockApp()">Liberar</button>
+                </div>
+                <div class="unlock-msg" id="unlockMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-card">
+        <div class="options">
+            <div class="option-row">
+                <button class="option-btn btn-maquina" onclick="handleAction('maquina')">
+                    ⚙️ Máquina
+                    <span class="btn-badge">(v2.0)</span>
+                </button>
+                <div class="info-btn" onclick="handleInfo('maquina')" aria-label="Informações sobre Máquina">i</div>
+            </div>
+
+            <div class="option-row">
+                <button class="option-btn btn-operacional" onclick="handleAction('operacional')">
+                    🧍 Operacional
+                    <span class="btn-badge">(v2.0)</span>
+                </button>
+                <div class="info-btn" onclick="handleInfo('operacional')" aria-label="Informações sobre Operacional">i</div>
+            </div>
+
+            <div class="option-row">
+                <button class="option-btn btn-multi" onclick="handleAction('multi')">
+                    ⏱️ Multi cronômetro
+                    <span class="btn-badge">(v2.0)</span>
+                </button>
+                <div class="info-btn" onclick="handleInfo('multi')" aria-label="Informações sobre Multi cronômetro">i</div>
+            </div>
+
+            <div class="option-row">
+                <button class="option-btn btn-trabalho-padrao" onclick="handleAction('trabalho-padrao')">
+                    📸 Trabalho padrão
+                    <span class="btn-badge">(EM BREVE)</span>
+                </button>
+                <div class="info-btn" onclick="handleInfo('trabalho-padrao')" aria-label="Informações sobre Trabalho padrão">i</div>
+            </div>
+
+            <div class="option-row">
+                <button class="option-btn btn-oee" onclick="handleAction('oee')">
+                    📈 Calculadora de OEE
+                    <span class="btn-badge">(EM BREVE)</span>
+                </button>
+                <div class="info-btn" onclick="handleInfo('oee')" aria-label="Informações sobre Calculadora de OEE">i</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="branding">
+    <span>Desenvolvido por 
+        <a href="https://www.linkedin.com/in/pedro-ag-portela/" target="_blank" rel="noopener" class="linkedin-link">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+            </svg>
+            Pedro Portela
+        </a>
+    </span>
+    <span class="role-text">Especialista de Processos Industriais & Black Belt</span>
+</div>
+
+<div class="modal-overlay" id="infoModal">
+    <div class="modal-content">
+        <h3 class="modal-title" id="infoTitle">Informação</h3>
+        <p class="modal-text" id="infoText">Texto</p>
+        <button class="modal-close" onclick="closeInfo()">Fechar</button>
+    </div>
+</div>
+
+
+<script>
+    const APP_TRIAL_START = '2026-04-03T12:00:00-03:00';
+    const APP_TRIAL_DURATION_DAYS = 14;
+    const APP_UNLOCK_PASSWORD = 'AZEITONA';
+    const STORAGE_KEY_UNLOCK = 'cronoanalise_trial_unlock_v2_0';
+    const TRIAL_END_MS = new Date(APP_TRIAL_START).getTime() + (APP_TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
+
+    let isUnlocked = localStorage.getItem(STORAGE_KEY_UNLOCK) === '1';
+
+    function isExpired() {
+        return Date.now() >= TRIAL_END_MS;
+    }
+
+    function updateTrialUI() {
+        const now = Date.now();
+        const expired = isExpired();
+        const countdownEl = document.getElementById('trialCountdown');
+        const statusEl = document.getElementById('trialStatus');
+        const messageEl = document.getElementById('trialMessage');
+        const unlockPanel = document.getElementById('unlockPanel');
+
+        if (!expired) {
+            const remainingMs = Math.max(TRIAL_END_MS - now, 0);
+            const totalSeconds = Math.floor(remainingMs / 1000);
+            const days = Math.floor(totalSeconds / 86400);
+            const hours = Math.floor((totalSeconds % 86400) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            countdownEl.textContent = `${days}d ${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+            statusEl.textContent = 'APP EM TESTE';
+            messageEl.textContent = 'Versão temporária liberada por 14 dias. Após o vencimento, o acesso será liberado somente com senha.';
+            unlockPanel.hidden = true;
+            document.body.classList.remove('expired');
+            return;
+        }
+
+        document.body.classList.add('expired');
+
+        if (isUnlocked) {
+            countdownEl.textContent = 'Teste expirado';
+            statusEl.textContent = 'ACESSO LIBERADO';
+            messageEl.textContent = 'O prazo de teste venceu, mas este aparelho foi liberado por senha.';
+            unlockPanel.hidden = true;
+        } else {
+            countdownEl.textContent = '00d 00h 00m 00s';
+            statusEl.textContent = 'TESTE EXPIRADO';
+            messageEl.textContent = 'O período de teste terminou. Insira a senha para liberar o app neste aparelho.';
+            unlockPanel.hidden = false;
+        }
+    }
+
+    function ensureAccess() {
+        if (isExpired() && !isUnlocked) {
+            updateTrialUI();
+            const input = document.getElementById('unlockPassword');
+            if (input) {
+                input.focus();
+            }
+            return false;
+        }
+        return true;
+    }
+
+    function unlockApp() {
+        const input = document.getElementById('unlockPassword');
+        const msg = document.getElementById('unlockMessage');
+        const typed = (input.value || '').trim().toUpperCase();
+
+        msg.className = 'unlock-msg';
+
+        if (typed === APP_UNLOCK_PASSWORD) {
+            isUnlocked = true;
+            localStorage.setItem(STORAGE_KEY_UNLOCK, '1');
+            msg.textContent = 'Senha correta. App liberado neste aparelho.';
+            msg.classList.add('success');
+            input.value = '';
+            updateTrialUI();
+            return;
+        }
+
+        msg.textContent = 'Senha incorreta.';
+        msg.classList.add('error');
+    }
+
+    function handleAction(tipo) {
+        if (!ensureAccess()) return;
+        goTo(tipo);
+    }
+
+    function handleInfo(tipo) {
+        if (!ensureAccess()) return;
+        openInfo(tipo);
+    }
+
+    function goTo(tipo) {
+        alert("Depois vamos conectar esta opção ao HTML de " + tipo + ".");
+    }
+
+    function openInfo(tipo) {
+        const title = document.getElementById('infoTitle');
+        const text = document.getElementById('infoText');
+        const modal = document.getElementById('infoModal');
+
+        if (tipo === 'maquina') {
+            title.innerText = '⚙️ Máquina';
+            text.innerText = 'Usado para cronoanálise focada em ciclos de máquina. Mede tempos de ciclo, variação entre amostras, estabilidade, capacidade estimada, eficiência e gera relatório técnico com resumo executivo.';
+        } else if (tipo === 'operacional') {
+            title.innerText = '🧍 Operacional';
+            text.innerText = 'Usado para cronoanálise operacional de atividades humanas, máquina e espera. Mede a sequência das etapas, tempos por elemento, classificação VA, NVA e BNVA e gera relatório visual para análise de balanceamento.';
+        } else if (tipo === 'multi') {
+            title.innerText = '⏱️ Multi cronômetro';
+            text.innerText = 'Usado para acompanhar múltiplos tempos ao mesmo tempo. Ideal para comparar operações paralelas, postos simultâneos, testes concorrentes ou monitoramento de várias atividades em uma única tela.';
+        } else if (tipo === 'trabalho-padrao') {
+            title.innerText = '📸 Trabalho padrão';
+            text.innerText = 'Área reservada para documentar o trabalho padrão com apoio visual. A proposta é combinar etapas, tempos, observações e fotos da operação em um formato simples de consulta.';
+        } else {
+            title.innerText = '📈 Calculadora de OEE';
+            text.innerText = 'Área reservada para cálculo rápido de disponibilidade, performance, qualidade e OEE, com foco em apoio à análise de perdas e leitura rápida do resultado.';
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function closeInfo() {
+        document.getElementById('infoModal').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        updateTrialUI();
+        setInterval(updateTrialUI, 1000);
+
+        const input = document.getElementById('unlockPassword');
+        if (input) {
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    unlockApp();
+                }
+            });
+        }
+    });
+</script>
+
+
+</body>
+</html>
