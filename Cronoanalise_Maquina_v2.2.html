@@ -52,7 +52,10 @@
         }
         input:focus, select:focus { outline: 2px solid var(--blue); }
 
-        .live-timer { font-size: 2.8rem; font-weight: bold; text-align: center; font-variant-numeric: tabular-nums; margin: 5px 0 10px 0; font-family: monospace; color: #fff;}
+        .live-timer { font-size: 2.8rem; font-weight: bold; text-align: center; font-variant-numeric: tabular-nums; margin: 5px 0 2px 0; font-family: monospace; color: #fff;}
+        .total-timer-wrap { text-align: center; margin-bottom: 10px; }
+        .total-timer-label { font-size: 0.65rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase; letter-spacing: 0.04em; }
+        .total-timer { font-size: 1.1rem; font-weight: bold; font-family: monospace; color: var(--text-muted); font-variant-numeric: tabular-nums; }
         
         .btn-row { display: flex; gap: 6px; margin-bottom: 10px;}
         button { border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.1s;}
@@ -125,6 +128,8 @@ body.export-mode .chart-title{
         .fixed-bottom { position: fixed; bottom: 0; left: 0; right: 0; padding: 10px; background: linear-gradient(transparent, var(--bg-color) 30%); z-index: 50;}
         .btn-lap { width: 100%; padding: 20px; font-size: 1.8rem; background-color: var(--blue); border-radius: 10px; box-shadow: 0 5px 0 #0056b3; }
         .btn-lap:active:not(:disabled) { transform: translateY(5px); box-shadow: none; }
+        .lap-obs-input { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: #2a2a2a; color: white; font-size: 0.9rem; margin-bottom: 6px; display: none; }
+        .lap-obs-input::placeholder { color: var(--text-muted); }
         
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px;}
         .modal-content { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); max-width: 320px; width: 100%; text-align: center;}
@@ -146,12 +151,15 @@ body.export-mode .chart-title{
         body.export-mode {
             background: white !important;
             color: #222 !important;
-            width: 1122px !important; /* Força a resolução A4 Landscape pro Screenshot */
-            padding: 20px !important;
+            width: 794px !important; /* A4 Retrato a 96DPI */
+            padding: 0 !important;
         }
 
         .export-mode #exportContainer {
-            width: 100% !important;
+            width: 794px !important;
+            min-height: 1123px !important;
+            padding: 24px 28px !important;
+            box-sizing: border-box !important;
             background: white !important;
         }
 
@@ -175,61 +183,61 @@ body.export-mode .chart-title{
         }
 
         .export-mode #print-wrapper {
-            display: flex !important;
-            flex-direction: row !important;
-            gap: 20px !important;
-            align-items: flex-start !important;
-            width: 100% !important;
+            display: flex !important; flex-direction: row !important;
+            gap: 16px !important; align-items: flex-start !important; width: 100% !important;
         }
-        .export-mode .col-1 { width: 45% !important; }
-        .export-mode .col-2 { width: 55% !important; }
+        .export-mode .col-1 { width: 44% !important; flex-shrink: 0 !important; }
+        .export-mode .col-2 { flex: 1 !important; min-width: 0 !important; }
 
-        .export-mode .print-summary { display: grid !important; grid-template-columns: 1fr 1fr; gap: 6px 15px; margin-bottom: 10px; font-size: 10pt; background: #f8f9fa; padding: 12px; border: 1px solid #ddd; border-radius: 6px; }
-        .export-mode .print-executive-summary { display: block !important; font-size: 10pt; font-style: italic; color: #444; margin-bottom: 10px; padding: 10px; border-left: 3px solid var(--blue); background: #f4f4f4; }
+        .export-mode .print-summary { display: grid !important; grid-template-columns: 1fr 1fr; gap: 3px 12px; margin-bottom: 8px; font-size: 8.5pt; background: #f8f9fa; padding: 8px 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .export-mode .print-executive-summary { display: block !important; font-size: 7.5pt; font-style: italic; color: #444; margin-bottom: 8px; padding: 6px 9px; border-left: 3px solid var(--blue); background: #f4f4f4; line-height: 1.3; }
 
         .export-mode .text-muted, .export-mode label { color: #555 !important; }
-        .export-mode .result-title { color: #444 !important; font-size: 8pt !important;}
-        .export-mode .result-box { background: #f8f9fa !important; border: 1px solid #ddd !important; padding: 8px !important;}
-        .export-mode .result-value { font-size: 15pt !important; color: #000 !important; }
-        
+        .export-mode .result-title { color: #444 !important; font-size: 6.5pt !important; }
+        .export-mode .result-box { background: #f8f9fa !important; border: 1px solid #ddd !important; padding: 5px 6px !important; }
+        .export-mode .result-value { font-size: 12pt !important; color: #000 !important; }
+        .export-mode .results-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 5px !important; }
+        .export-mode .full-width { grid-column: span 4 !important; }
+
         .export-mode .text-green { color: #28a745 !important; }
         .export-mode .text-red { color: #dc3545 !important; }
-        .export-mode .text-yellow { color: #d39e00 !important; } 
+        .export-mode .text-yellow { color: #d39e00 !important; }
         .export-mode .text-blue { color: #007bff !important; }
 
-        .export-mode .chart-wrapper, .export-mode .histogram-wrapper { border-color: #333 !important; height: 180px !important; margin-bottom: 25px !important; background-color: #f4f4f4 !important;}
-        .export-mode .chart-bar, .export-mode .hist-bar { min-height: 2px !important; } 
-        .export-mode .chart-bar.over-takt { border: 1px solid #000 !important; } 
+        .export-mode .chart-wrapper, .export-mode .histogram-wrapper { border-color: #333 !important; height: 130px !important; margin-bottom: 14px !important; background-color: #f4f4f4 !important; }
+        .export-mode .chart-bar, .export-mode .hist-bar { min-height: 2px !important; }
+        .export-mode .chart-bar.over-takt { border: 1px solid #000 !important; }
         .export-mode .chart-bar.under-takt { border: 1px solid #666 !important; }
-.export-mode .takt-line { background-color: #000 !important; height: 1px !important;}
-        .export-mode .takt-label { color: #000 !important; font-size: 8.5pt !important;}
-        .export-mode .avg-line { border-top: 1px dashed #333 !important;}
-        .export-mode .avg-label { color: #333 !important; font-size: 8.5pt !important;}
-        .export-mode .hist-label { color: #000 !important; font-size: 8pt !important; }
-        .export-mode .hist-x-label { color: #333 !important; font-size: 8.5pt !important;}
-        
-        .export-mode .print-header { display: flex !important; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px; width: 100%;}
-        .export-mode .print-header h1 { margin: 0; font-size: 18pt; color: #222;}
-        .export-mode .print-header p { margin: 0; font-size: 10pt; color: #555;}
-        
+        .export-mode .takt-line { background-color: #000 !important; height: 1px !important; }
+        .export-mode .takt-label { color: #000 !important; font-size: 7.5pt !important; }
+        .export-mode .avg-line { border-top: 1px dashed #333 !important; }
+        .export-mode .avg-label { color: #333 !important; font-size: 7.5pt !important; }
+        .export-mode .hist-label { color: #000 !important; font-size: 7pt !important; }
+        .export-mode .hist-x-label { color: #333 !important; font-size: 7pt !important; }
+
+        .export-mode .print-header { display: flex !important; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 7px; margin-bottom: 10px; width: 100%; }
+        .export-mode .print-header h1 { margin: 0; font-size: 13pt; color: #222; }
+        .export-mode .print-header p { margin: 0; font-size: 8pt; color: #555; line-height: 1.5; }
+
         .export-mode #historyListScreen { display: none !important; }
-        
-        .export-mode #historyCard { width: 100% !important; margin-top: 10px !important; border-top: 1px solid #ccc !important; padding-top: 15px !important; display: block !important; }
-        
-        /* Grid nativo para as 7 colunas, html2canvas lê isso perfeitamente */
-        .export-mode .print-only-history { 
-            display: grid !important; 
+        .export-mode #historyCard { width: 100% !important; margin-top: 8px !important; border-top: 1px solid #ccc !important; padding-top: 10px !important; display: block !important; }
+
+        /* 7 colunas compactas — 20 amostras em 3 linhas, 30 amostras em 5 */
+        .export-mode .print-only-history {
+            display: grid !important;
             grid-template-columns: repeat(7, 1fr) !important;
-            gap: 10px 15px !important;
-            background: white !important; 
-            border: none !important; 
-            width: 100% !important;
+            gap: 2px 6px !important;
+            background: white !important; border: none !important; width: 100% !important;
         }
-        .export-mode .history-row { 
-            border-bottom: 1px solid #eee !important; 
-            padding: 4px 2px !important; 
-            color: #000 !important; 
+        .export-mode .history-row {
+            border: none !important;
+            border-bottom: 1px solid #f0f0f0 !important;
+            padding: 2px 3px !important;
+            color: #000 !important;
+            font-size: 7.5pt !important;
         }
+        .export-mode .history-id { font-size: 7pt !important; color: #888 !important; }
+        .export-mode .history-time { font-size: 8pt !important; font-weight: 700 !important; font-family: monospace !important; }
     
 .app-version { position: absolute; top: 8px; right: 10px; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); opacity: 0.9; pointer-events: none; }
 body.export-mode .app-version { display: none !important; }
@@ -334,7 +342,7 @@ body.export-mode .hist-label{
 </style>
 </head>
 <body>
-<div class="app-version" id="appVersion">v2.0</div>
+<div class="app-version" id="appVersion">v2.1</div>
 
 <div id="exportContainer">
 
@@ -345,7 +353,7 @@ body.export-mode .hist-label{
         </div>
         <div style="text-align: right;">
             <p><strong>Data:</strong> <span id="printDate">--/--/----</span></p>
-            <p><strong>Analista:</strong> Pedro Portela</p>
+            <p><strong>Analista:</strong> <span id="printAnalyst">—</span></p>
         </div>
     </div>
 
@@ -356,6 +364,10 @@ body.export-mode .hist-label{
                     <div class="input-group full-width">
                         <label>Equipamento / Operação</label>
                         <input type="text" id="equipName" placeholder="Ex: Torno CNC, Montagem..." >
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Analista Responsável</label>
+                        <input type="text" id="analystName" placeholder="Nome de quem está medindo..." >
                     </div>
                     <div class="input-group">
                         <label class="label-with-info">Peças / Ciclo <span class="info-icon info-inline" onclick="showInfo('pecas_ciclo')">!</span></label>
@@ -397,6 +409,11 @@ body.export-mode .hist-label{
                 </div>
 
                 <div class="live-timer" id="liveTimer">00:00.00</div>
+
+                <div class="total-timer-wrap">
+                    <span class="total-timer-label">Tempo total de medição </span>
+                    <span class="total-timer" id="totalTimer">00:00</span>
+                </div>
 
                 <div class="results-grid">
                     <div class="result-box">
@@ -485,16 +502,35 @@ body.export-mode .hist-label{
 </div>
 
 <div class="fixed-bottom">
+    <input type="text" id="lapObs" class="lap-obs-input" placeholder="Observação do ciclo (opcional)..." maxlength="80">
     <button id="btnLap" class="btn-lap" onclick="recordLap()" disabled>⏱ LAP</button>
 </div>
 
 <script>
     let isRunning = false;
     let lastLapTime = 0;
-    let elapsedBeforePause = 0; 
-    let laps = []; 
-    let lapCounterId = 0; 
+    let elapsedBeforePause = 0;
+    let laps = [];
+    let lapCounterId = 0;
     let timerAnimation;
+
+    // Timer total de medição (não é resetado a cada LAP)
+    let studyStartTime = 0;
+    let studyTotalMs = 0;
+
+    function formatTotalTime(ms) {
+        const totalSecs = Math.floor(ms / 1000);
+        const h = Math.floor(totalSecs / 3600);
+        const m = Math.floor((totalSecs % 3600) / 60);
+        const s = totalSecs % 60;
+        if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function updateTotalTimer() {
+        const elapsed = studyTotalMs + (isRunning ? Date.now() - studyStartTime : 0);
+        document.getElementById('totalTimer').innerText = formatTotalTime(elapsed);
+    }
 
     const glossario = {
   'amostras': {
@@ -527,7 +563,7 @@ body.export-mode .hist-label{
   },
   'estabilidade': {
     title: 'Índice de Estabilidade',
-    text: 'Indicador de consistência do processo baseado na variação dos ciclos. Quanto mais próximo de 100%, menor a variabilidade entre medições.'
+    text: 'Indicador de consistência do processo: 100% − (Desvio Padrão ÷ Média × 100). Quanto mais próximo de 100%, mais repetível o processo. Abaixo de 85%: variação relevante. Abaixo de 70%: instabilidade crítica. Recomenda-se ao menos 10 amostras para resultado confiável.'
   },
   'eficiencia': {
     title: 'Eficiência',
@@ -595,6 +631,9 @@ function showInfo(key) {
             document.getElementById('printExecutiveSummary').innerText = text;
         }
 
+        const analyst = document.getElementById('analystName').value.trim() || 'Não informado';
+        document.getElementById('printAnalyst').innerText = analyst;
+
         let hoje = new Date();
         document.getElementById('printDate').innerText = hoje.toLocaleDateString('pt-BR') + " às " + hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     }
@@ -610,29 +649,77 @@ function showInfo(key) {
 
     
 function generateExecutiveSummary() {
-    const samples = parseInt((document.getElementById('valSamples')?.innerText || '0').replace(/[^\d]/g,'')) || 0;
-    const avg = document.getElementById('valAvgCycle')?.innerText || '0.00s';
-    const min = document.getElementById('valMinCycle')?.innerText || '0.00s';
-    const max = document.getElementById('valMaxCycle')?.innerText || '0.00s';
-    const last = document.getElementById('valLastCycle')?.innerText || '0.00s';
-    const estTxt = document.getElementById('valEstabilidade')?.innerText || '0%';
-    const eff = document.getElementById('valEfficiency')?.innerText || '--';
+    const stats = calculateStats();
+    if (!stats) return '—';
+
+    const { n, avgCycle, minTime, maxTime, stdDev, estabilidade } = stats;
+    const isHour = document.getElementById('timeUnit').value === '3600';
+    const units = parseFloat(document.getElementById('units').value) || 1;
+    const multiplier = parseInt(document.getElementById('timeUnit').value) || 3600;
+    const taktVal = parseFloat(document.getElementById('takt').value) || 0;
+    const unitLabel = isHour ? 'un/h' : 'un/min';
     const cap = document.getElementById('valHourlyCap')?.innerText || '0';
+    const effEl = document.getElementById('valEfficiency');
+    const range = maxTime - minTime;
+    const cv = n > 1 ? (stdDev / avgCycle) * 100 : 0;
 
-    const est = parseFloat(estTxt.replace('%','').replace(',','.')) || 0;
+    // Confiabilidade da amostra
+    let sampleMsg;
+    if (n < 5)       sampleMsg = `Amostragem insuficiente (n=${n}) — colete ao menos 10 ciclos para confiabilidade estatística.`;
+    else if (n < 10) sampleMsg = `Amostragem moderada (n=${n}) — ampliar para ≥10 ciclos aumentará a precisão.`;
+    else if (n < 20) sampleMsg = `Amostragem adequada (n=${n}).`;
+    else             sampleMsg = `Amostragem robusta (n=${n}).`;
 
-    let stability = '';
-    if (est >= 95) stability = 'Alta estabilidade do processo.';
-    else if (est >= 85) stability = 'Boa estabilidade, com variações controladas.';
-    else if (est >= 70) stability = 'Variação relevante entre ciclos.';
-    else stability = 'Alta instabilidade do processo.';
+    // Outliers (> média ± 2σ)
+    const outliers = n > 1 ? laps.filter(l => Math.abs(l.time - avgCycle) > 2 * stdDev) : [];
+    const outlierMsg = outliers.length > 0
+        ? ` ${outliers.length} ciclo(s) fora de ±2σ detectado(s) (amostras: ${outliers.map(l => '#' + (laps.indexOf(l)+1)).join(', ')}) — verificar ocorrências atípicas.`
+        : '';
 
-    let sampleTxt = '';
-    if (samples < 5) sampleTxt = 'Baixa amostragem.';
-    else if (samples < 10) sampleTxt = 'Amostragem moderada.';
-    else sampleTxt = 'Amostragem robusta.';
+    // Estabilidade
+    let stabMsg, stabAction;
+    if (n <= 1) {
+        stabMsg = 'Estabilidade indeterminada (amostra única).'; stabAction = '';
+    } else if (estabilidade >= 95) {
+        stabMsg = `Processo altamente estável (IE: ${estabilidade.toFixed(1)}%, CV: ${cv.toFixed(1)}%).`;
+        stabAction = ' Processo sob controle — ciclo médio confiável para definição de tempo padrão.';
+    } else if (estabilidade >= 85) {
+        stabMsg = `Boa estabilidade (IE: ${estabilidade.toFixed(1)}%, CV: ${cv.toFixed(1)}%).`;
+        stabAction = ' Variação aceitável. Investigar os ciclos extremos para consolidar o padrão.';
+    } else if (estabilidade >= 70) {
+        stabMsg = `Variação relevante (IE: ${estabilidade.toFixed(1)}%, CV: ${cv.toFixed(1)}%).`;
+        stabAction = ' Recomenda-se identificar causas de variação antes de definir tempo padrão.';
+    } else {
+        stabMsg = `Processo instável (IE: ${estabilidade.toFixed(1)}%, CV: ${cv.toFixed(1)}%).`;
+        stabAction = ' Ação corretiva necessária — processo imprevisível, não usar como referência sem investigação.';
+    }
 
-    return `Ciclo médio ${avg}, variando de ${min} a ${max}, último ciclo ${last}. ${stability} Eficiência ${eff}. Capacidade ${cap}. ${sampleTxt}`;
+    // Comparação com Takt
+    let taktMsg = '';
+    if (taktVal > 0) {
+        const aboveTakt = laps.filter(l => l.time > taktVal).length;
+        const margin = ((taktVal - avgCycle) / taktVal * 100);
+        if (avgCycle <= taktVal) {
+            taktMsg = ` Ciclo médio ${margin.toFixed(1)}% abaixo do Takt (${taktVal}s).` +
+                (aboveTakt > 0 ? ` Atenção: ${aboveTakt} ciclo(s) ultrapassaram o Takt — monitorar.` : ' Todos os ciclos dentro do Takt.');
+        } else {
+            taktMsg = ` CRÍTICO: Ciclo médio ${Math.abs(margin).toFixed(1)}% acima do Takt (${taktVal}s). ${aboveTakt}/${n} ciclos fora do ritmo — capacidade insuficiente para atender a demanda. Revisar processo ou negociar Takt.`;
+        }
+    }
+
+    // Eficiência vs meta
+    let effMsg = '';
+    if (effEl && effEl.innerText !== '--') {
+        const effVal = parseFloat(effEl.innerText);
+        if (!isNaN(effVal)) {
+            if (effVal >= 100)      effMsg = ` Eficiência de ${effEl.innerText} — meta atingida.`;
+            else if (effVal >= 90)  effMsg = ` Eficiência de ${effEl.innerText} — próxima da meta, pequeno ajuste no ciclo pode ser suficiente.`;
+            else if (effVal >= 75)  effMsg = ` Eficiência de ${effEl.innerText} — gap moderado. Analisar perdas e fontes de variação.`;
+            else                    effMsg = ` Eficiência de ${effEl.innerText} — gap crítico. Reavaliar método, layout ou balanceamento da operação.`;
+        }
+    }
+
+    return `${sampleMsg} Ciclo médio: ${avgCycle.toFixed(2)}s | Mín: ${minTime.toFixed(2)}s | Máx: ${maxTime.toFixed(2)}s | Amplitude: ${range.toFixed(2)}s | Desvio: ${stdDev.toFixed(2)}s.${outlierMsg} ${stabMsg}${stabAction}${taktMsg}${effMsg} Capacidade estimada: ${cap} ${unitLabel}.`;
 }
 
 
@@ -646,6 +733,7 @@ function getExecutiveSummaryText() {
         const getValue = (id, fallback='') => (document.getElementById(id)?.value ?? fallback).toString().trim();
 
         const equipName = getValue('equipName', 'Operação não informada');
+        const analystName = getValue('analystName', 'Não informado');
         const samples = getText('valSamples', '0');
         const avgCycle = getText('valAvgCycle', '0.00s');
         const minCycle = getText('valMinCycle', '0.00s');
@@ -657,27 +745,23 @@ function getExecutiveSummaryText() {
         const eficiencia = getText('valEfficiency', '--');
 
         const timeUnitValue = getValue('timeUnit', '60');
-        const takt = getValue('taktTime', '');
-        const meta = getValue('targetCycle', '');
-        const tolerancia = getValue('tolerance', '');
-        const lote = getValue('batchSize', '');
-        const observacao = getValue('notes', '');
+        const takt = getValue('takt', '');
+        const meta = getValue('target', '');
+        const observacao = getValue('lapObs', '');
 
         let unidadeTempo = 'un/min';
         if (timeUnitValue === '3600') unidadeTempo = 'un/h';
         if (timeUnitValue === '1') unidadeTempo = 'un/s';
 
         const params = [];
-        if (takt) params.push(`• 🎯 Takt / meta de ritmo: ${takt}`);
-        if (meta) params.push(`• ⌛ Meta de ciclo: ${meta}`);
-        if (tolerancia) params.push(`• 📐 Tolerância: ${tolerancia}`);
-        if (lote) params.push(`• 📦 Lote: ${lote}`);
+        if (takt) params.push(`• 🎯 Takt Time: ${takt}s`);
+        if (meta) params.push(`• 🎯 Meta: ${meta} ${unidadeTempo}`);
         params.push(`• 🧭 Unidade de capacidade: ${unidadeTempo}`);
-        if (observacao) params.push(`• 🗒️ Observação: ${observacao}`);
 
         return [
             `📄 DADOS TÉCNICOS`,
             `🏭 *Operação:* ${equipName}`,
+            `👤 *Analista:* ${analystName}`,
             `🔢 *Amostras registradas:* ${samples}`,
             ``,
             `⚙️ *Parâmetros da simulação*`,
@@ -816,34 +900,36 @@ async function generatePNG() {
         btn.disabled = true;
 
         try {
-            const imgData = await generateImageData(30);
+            const imgData = await generateImageData(0);
             const { jsPDF } = window.jspdf;
-            
-            // Cria um PDF deitado (Landscape) no formato A4
-            const pdf = new jsPDF('l', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfW = pdf.internal.pageSize.getWidth();
+            const pdfH = pdf.internal.pageSize.getHeight();
+
             const img = new Image();
             img.src = imgData;
             await new Promise(r => img.onload = r);
-            
-            const ratio = img.width / img.height;
-            let renderWidth = pdfWidth;
-            let renderHeight = pdfWidth / ratio;
 
-            // Ajusta se ficar maior que a altura da folha
-            if (renderHeight > pdfHeight) {
-                renderHeight = pdfHeight;
-                renderWidth = pdfHeight * ratio;
+            const imgHmm = img.height * (pdfW / img.width);
+
+            if (imgHmm <= pdfH) {
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfW, imgHmm, undefined, 'FAST');
+            } else {
+                // Multi-página
+                const pxPerMm = img.width / pdfW;
+                const pageHeightPx = pdfH * pxPerMm;
+                let offsetPx = 0, page = 0;
+                while (offsetPx < img.height) {
+                    if (page > 0) pdf.addPage();
+                    const sliceH = Math.min(pageHeightPx, img.height - offsetPx);
+                    const c = document.createElement('canvas');
+                    c.width = img.width; c.height = Math.ceil(sliceH);
+                    c.getContext('2d').drawImage(img, 0, -offsetPx);
+                    pdf.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, pdfW, c.height / pxPerMm, undefined, 'FAST');
+                    offsetPx += pageHeightPx; page++;
+                }
             }
-
-            // Centraliza a imagem na folha
-            const x = (pdfWidth - renderWidth) / 2;
-            const y = (pdfHeight - renderHeight) / 2;
-
-            pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight);
-            pdf.save(`Cronoanalise_${Date.now()}.pdf`); // Baixa direto sem o Android interferir
+            pdf.save(`Cronoanalise_${Date.now()}.pdf`);
         } catch(e) {
             alert("Erro ao gerar PDF.");
         } finally {
@@ -898,8 +984,8 @@ async function generatePNG() {
     function updateLiveTimer() {
         if (!isRunning) return;
         let currentTime = Date.now();
-        let diff = currentTime - lastLapTime;
-        document.getElementById('liveTimer').innerText = formatTime(diff);
+        document.getElementById('liveTimer').innerText = formatTime(currentTime - lastLapTime);
+        updateTotalTimer();
         timerAnimation = requestAnimationFrame(updateLiveTimer);
     }
 
@@ -908,12 +994,14 @@ async function generatePNG() {
         let now = Date.now();
         lastLapTime = elapsedBeforePause > 0 ? now - elapsedBeforePause : now;
         elapsedBeforePause = 0;
+        studyStartTime = now; // inicia ou retoma contagem total
         
         document.getElementById('btnStart').disabled = true;
         document.getElementById('btnStart').innerText = "▶ Iniciar";
         document.getElementById('btnStop').disabled = false;
         document.getElementById('btnLap').disabled = false;
-        
+        document.getElementById('lapObs').style.display = 'block';
+
         ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = true);
         updateLiveTimer();
     }
@@ -922,31 +1010,38 @@ async function generatePNG() {
         if (!isRunning) return;
         isRunning = false;
         cancelAnimationFrame(timerAnimation);
-        elapsedBeforePause = Date.now() - lastLapTime;
+        const now = Date.now();
+        elapsedBeforePause = now - lastLapTime;
+        studyTotalMs += now - studyStartTime; // acumula o tempo total
         
         document.getElementById('btnStart').disabled = false;
         document.getElementById('btnStart').innerText = "▶ Retomar";
         document.getElementById('btnStop').disabled = true;
         document.getElementById('btnLap').disabled = true;
+        document.getElementById('lapObs').style.display = 'none';
     }
 
     function recordLap() {
         if (!isRunning) return;
         let now = Date.now();
-        let rawCycleTime = (now - lastLapTime) / 1000; 
+        let rawCycleTime = (now - lastLapTime) / 1000;
         let cycleTime = Number(rawCycleTime.toFixed(2));
-        
+        let obs = document.getElementById('lapObs').value.trim();
+
         lapCounterId++;
-        laps.push({ id: lapCounterId, time: cycleTime });
-        
-        lastLapTime = now; 
+        laps.push({ id: lapCounterId, time: cycleTime, obs: obs });
+
+        document.getElementById('lapObs').value = '';
+        lastLapTime = now;
         elapsedBeforePause = 0;
         updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        saveToStorage();
     }
 
     function deleteLap(id) {
         laps = laps.filter(lap => lap.id !== id);
         updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        saveToStorage();
     }
 
     function calculateStats() {
@@ -1051,14 +1146,16 @@ async function generatePNG() {
         for (let i = laps.length - 1; i >= 0; i--) {
             let row = document.createElement('div');
             row.className = 'history-row';
-            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s</span><button class="btn-delete" onclick="deleteLap(${laps[i].id})">🗑 Excl</button>`;
+            let obsHtml = laps[i].obs ? `<span style="flex:2;font-size:0.78rem;color:var(--text-muted);text-align:left;padding-left:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${laps[i].obs}">📝 ${laps[i].obs}</span>` : `<span style="flex:2;"></span>`;
+            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s</span>${obsHtml}<button class="btn-delete" onclick="deleteLap(${laps[i].id})">🗑 Excl</button>`;
             listScreen.appendChild(row);
         }
 
         for (let i = 0; i < laps.length; i++) {
             let row = document.createElement('div');
             row.className = 'history-row';
-            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s</span>`;
+            let obsText = laps[i].obs ? ` — ${laps[i].obs}` : '';
+            row.innerHTML = `<span class="history-id">#${i + 1}</span><span class="history-time">${laps[i].time.toFixed(2)}s${obsText}</span>`;
             listPrint.appendChild(row);
         }
     }
@@ -1204,24 +1301,76 @@ function resetTimer() {
         elapsedBeforePause = 0;
         
         document.getElementById('liveTimer').innerText = "00:00.00";
+        studyTotalMs = 0; studyStartTime = 0;
+        document.getElementById('totalTimer').innerText = "00:00";
         document.getElementById('btnStart').disabled = false;
         document.getElementById('btnStart').innerText = "▶ Iniciar";
         document.getElementById('btnStop').disabled = true;
         document.getElementById('btnLap').disabled = true;
+        document.getElementById('lapObs').value = '';
+        document.getElementById('lapObs').style.display = 'none';
         
         ['equipName', 'units', 'timeUnit', 'takt', 'target'].forEach(id => document.getElementById(id).disabled = false);
         updateUI(); document.getElementById('printExecutiveSummary').innerText = generateExecutiveSummary();
+        localStorage.removeItem(STORAGE_KEY);
     }
+
+    // ==========================================
+    // PERSISTÊNCIA DE SESSÃO (localStorage)
+    // ==========================================
+    const STORAGE_KEY = 'cronoanalise_maquina_v2';
+
+    function saveToStorage() {
+        const config = {
+            equipName: document.getElementById('equipName').value,
+            analystName: document.getElementById('analystName').value,
+            units: document.getElementById('units').value,
+            timeUnit: document.getElementById('timeUnit').value,
+            takt: document.getElementById('takt').value,
+            target: document.getElementById('target').value
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ config, laps, lapCounterId }));
+    }
+
+    function loadFromStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (data.config) {
+                document.getElementById('equipName').value = data.config.equipName || '';
+                document.getElementById('analystName').value = data.config.analystName || '';
+                document.getElementById('units').value = data.config.units || '1';
+                document.getElementById('timeUnit').value = data.config.timeUnit || '3600';
+                document.getElementById('takt').value = data.config.takt || '';
+                document.getElementById('target').value = data.config.target || '';
+                changeTimeUnit();
+            }
+            if (Array.isArray(data.laps) && data.laps.length > 0) {
+                laps = data.laps;
+                lapCounterId = data.lapCounterId || laps.length;
+                updateUI();
+                document.getElementById('btnExport').disabled = false;
+                document.getElementById('btnPDF').disabled = false;
+                document.getElementById('btnPNG').disabled = false;
+                document.getElementById('btnWhatsApp').disabled = false;
+            }
+        } catch(e) {
+            console.warn('Erro ao carregar sessão salva:', e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFromStorage);
 
     function exportToExcel() {
         if (laps.length === 0) return;
         let equipName = document.getElementById('equipName').value.trim() || "Nao_Identificado";
         let safeFileName = equipName.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
         
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFFEquipamento/Operacao:;" + equipName + "\n\nAmostra;Tempo de Ciclo (s)\n";
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFFEquipamento/Operacao:;" + equipName + "\n\nAmostra;Tempo de Ciclo (s);Observacao\n";
 
         laps.forEach(function(lap, index) {
-            csvContent += `${index + 1};${String(lap.time.toFixed(2)).replace('.', ',')}\r\n`;
+            csvContent += `${index + 1};${String(lap.time.toFixed(2)).replace('.', ',')};${lap.obs || ''}\r\n`;
         });
 
         let link = document.createElement("a");

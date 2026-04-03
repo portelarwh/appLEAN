@@ -100,7 +100,8 @@
         .is-nva { background-color: var(--red); color: white; border: 1px solid var(--red);}
         .is-bnva { background-color: var(--yellow); color: #000; border: 1px solid var(--yellow);}
         
-        .history-time { font-weight: bold; font-family: monospace; font-size: 0.95rem; min-width: 45px; text-align: right;}
+        .history-time { font-weight: bold; font-family: monospace; font-size: 0.95rem; min-width: 45px; text-align: center;}
+        .history-perc { font-weight: bold; font-family: monospace; font-size: 0.85rem; min-width: 40px; text-align: center; color: var(--text-muted); }
         
         .element-desc { flex: 1; background: transparent; border: none; border-bottom: 1px dashed var(--border); color: white; text-align: left; font-size: 0.85rem; font-weight: normal; padding: 4px; border-radius: 0; min-width: 0;}
         .element-desc:focus { outline: none; border-bottom: 1px solid var(--blue); background: rgba(255,255,255,0.05);}
@@ -154,22 +155,21 @@
         .print-summary { display: none; }
         .print-executive-summary { display: none; }
 
-        /* ======== CLASSE EXPORT-MODE ======== */
+        /* ======== CLASSE EXPORT-MODE — A4 Paisagem (1123 × 794px a 96DPI) ======== */
         body.export-mode {
             background: white !important;
             color: #222 !important;
-            width: 1123px !important; /* Largura cravada do A4 a 96DPI */
+            width: 794px !important; /* A4 Retrato a 96DPI */
             padding: 0 !important;
             margin: 0 !important;
         }
 
-        /* Container export recebe o padding interno para gerar margem real no PNG/PDF */
-        .export-mode #exportContainer { 
-            width: 1123px !important;
-            min-height: 794px !important;
-            padding: 16px !important;
+        .export-mode #exportContainer {
+            width: 794px !important;
+            min-height: 1123px !important;
+            padding: 24px 28px !important;
             box-sizing: border-box !important;
-            background: white !important; 
+            background: white !important;
         }
 
         .export-mode .card { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin-bottom: 10px !important; }
@@ -190,18 +190,19 @@
 
         .export-mode .print-only { display: inline-block !important; }
 
-        .export-mode #print-wrapper { display: flex !important; flex-direction: row !important; gap: 24px !important; align-items: flex-start !important; width: 100% !important; }
-        .export-mode .col-1 { width: 35% !important; }
-        .export-mode .col-2 { width: 65% !important; }
+        .export-mode #print-wrapper { display: flex !important; flex-direction: column !important; gap: 0 !important; width: 100% !important; }
+        .export-mode .col-1 { width: 100% !important; }
+        .export-mode .col-2 { width: 100% !important; }
 
-        .export-mode .print-summary { display: grid !important; grid-template-columns: 1fr; gap: 6px; margin-bottom: 20px; font-size: 11pt; background: #f8f9fa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; }
-        
+        .export-mode .print-summary { display: block !important; margin-bottom: 6px; font-size: 9pt; background: #f8f9fa; padding: 7px 12px; border: 1px solid #ddd; border-radius: 5px; }
+
         .export-mode label { color: #555 !important; }
-        .export-mode .result-title { font-size: 8pt !important;}
-        .export-mode .result-sub { font-size: 10pt !important; color: #666 !important;}
-        
-        .export-mode .result-box { background: #f8f9fa !important; padding: 10px !important; border-style: solid !important; border-width: 1px !important;}
-        .export-mode .result-value { font-size: 18pt !important; color: #000 !important; }
+        .export-mode .result-title { font-size: 6.5pt !important; }
+        .export-mode .result-sub { font-size: 7.5pt !important; color: #666 !important; }
+
+        .export-mode .results-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; margin-bottom: 8px !important; }
+        .export-mode .result-box { background: #f8f9fa !important; padding: 7px 6px !important; border-style: solid !important; border-width: 1px !important; }
+        .export-mode .result-value { font-size: 13pt !important; color: #000 !important; }
         
         .export-mode .text-blue { color: #007bff !important; }
         .export-mode .text-orange { color: #fd7e14 !important; }
@@ -210,7 +211,7 @@
         .export-mode .text-red { color: #dc3545 !important; }
         .export-mode .text-yellow { color: #d39e00 !important; }
 
-        .export-mode .gantt-wrapper { height: 58px !important; background: transparent !important; margin-bottom: 16px !important; gap: 2px !important; }
+        .export-mode .gantt-wrapper { background: transparent !important; gap: 2px !important; }
         .export-mode .gantt-block { padding: 0 !important; }
         .export-mode .gantt-main-bar { font-size: 8pt !important; font-weight: 700 !important; border-radius: 3px !important; }
         .export-mode .gantt-va-line { height: 6px !important; margin-top: 3px !important; }
@@ -289,7 +290,8 @@
             font-size: 9.5pt !important;
             font-weight: 700 !important;
             min-width: 0 !important;
-            text-align: left !important;
+            text-align: center !important;
+            justify-content: center !important;
             display: inline-flex !important;
             align-items: center !important;
             min-height: 34px !important;
@@ -385,93 +387,70 @@
             min-width: 0 !important;
         }
 
-        .export-mode .print-header { display: flex !important; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 25px; width: 100%;}
-        .export-mode .print-header h1 { margin: 0; font-size: 22pt; color: #222;}
-        .export-mode .print-header p { margin: 0; font-size: 12pt; color: #555;}
-        
-        .export-mode .print-executive-summary { display: block !important; font-size: 11pt; font-style: italic; color: #444; margin-bottom: 20px; padding: 12px; border-left: 4px solid var(--blue); background: #f4f4f4; line-height: 1.4;}
+        .export-mode .print-header { display: flex !important; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 12px; width: 100%; }
+        .export-mode .print-header h1 { margin: 0; font-size: 15pt; color: #222; }
+        .export-mode .print-header p { margin: 0; font-size: 8.5pt; color: #555; line-height: 1.6; }
+
+        .export-mode .print-executive-summary { display: block !important; font-size: 8pt; font-style: italic; color: #444; margin-bottom: 8px; padding: 8px 11px; border-left: 3px solid var(--blue); background: #f4f4f4; line-height: 1.35; }
+
+        .export-mode .gantt-wrapper { height: 60px !important; margin-bottom: 14px !important; overflow: visible !important; }
+        .export-mode .gantt-block { overflow: visible !important; }
+        .export-mode .gantt-main-bar { font-size: 9pt !important; }
+        .export-mode .chart-title { font-size: 8pt !important; margin-bottom: 4px !important; margin-top: 8px !important; }
+
+        /* Sem max-height — passa para página 2 se necessário */
+        .export-mode .history-container { max-height: none !important; overflow: visible !important; }
     
-        /* Ajustes finos solicitados no relatório (sem alterar a tela operacional) */
-        .export-mode .history-table-header,
+        /* ===== Linhas compactas — cabe 25+ etapas por página ===== */
+        .export-mode .history-table-header {
+            grid-template-columns: 26px 68px 44px 48px 36px 1fr !important;
+            column-gap: 5px !important;
+            background: #f1f3f5 !important; border: 1px solid #d6d9dd !important;
+            border-radius: 4px !important; padding: 4px 6px !important;
+            font-size: 7pt !important; font-weight: 700 !important; color: #4b5563 !important;
+            margin-bottom: 3px !important;
+        }
         .export-mode .history-row {
-            grid-template-columns: 50px 100px 70px 70px 1fr !important;
-            column-gap: 10px !important;
-            border: 1px solid #e5e7eb !important;
-            background: #ffffff !important;
-            border-radius: 0 !important;
-            padding: 7px 10px !important;
-            min-height: 38px !important;
+            grid-template-columns: 26px 68px 44px 48px 36px 1fr !important;
+            column-gap: 5px !important;
+            border: none !important; border-bottom: 1px solid #f0f0f0 !important;
+            background: #ffffff !important; border-radius: 0 !important;
+            padding: 3px 6px !important; min-height: 0 !important;
         }
-        .export-mode .history-row:nth-child(even) {
-            background: #fafafa !important;
-        }
+        .export-mode .history-row:nth-child(even) { background: #fafafa !important; }
 
         .export-mode .history-id {
-            width: 50px !important;
-            max-width: 50px !important;
-            min-width: 50px !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: clip !important;
-            text-align: right !important;
-            justify-self: end !important;
-            font-variant-numeric: tabular-nums !important;
+            width: 26px !important; max-width: 26px !important; min-width: 26px !important;
+            text-align: center !important; justify-self: center !important;
+            font-size: 7pt !important; font-variant-numeric: tabular-nums !important;
         }
-
         .export-mode .type-badge {
-            width: 100px !important;
-            max-width: 100px !important;
-            min-width: 100px !important;
-            justify-content: center !important;
-            text-align: center !important;
-            padding: 5px 8px !important;
-            min-height: 30px !important;
-            border-radius: 5px !important;
-            font-size: 8pt !important;
+            width: 68px !important; max-width: 68px !important; min-width: 68px !important;
+            justify-content: center !important; text-align: center !important;
+            padding: 2px 3px !important; min-height: 0 !important;
+            border-radius: 3px !important; font-size: 7pt !important;
         }
-
-        .export-mode .type-inline {
-            width: 100% !important;
-            justify-content: center !important;
-            gap: 0 !important;
-        }
-
-        .export-mode .type-icon {
-            display: none !important;
-        }
-
-        .export-mode .type-label {
-            display: inline !important;
-            font-weight: 700 !important;
-        }
+        .export-mode .type-inline { width: 100% !important; justify-content: center !important; gap: 0 !important; }
+        .export-mode .type-icon { display: none !important; }
+        .export-mode .type-label { display: inline !important; font-weight: 700 !important; }
 
         .export-mode .badge-va.print-only {
-            width: 70px !important;
-            max-width: 70px !important;
-            min-width: 70px !important;
-            min-height: 30px !important;
-            padding: 4px 6px !important;
-            font-size: 8pt !important;
-            border-radius: 5px !important;
+            width: 44px !important; max-width: 44px !important; min-width: 44px !important;
+            min-height: 0 !important; padding: 2px 3px !important;
+            font-size: 7pt !important; border-radius: 3px !important;
         }
-
         .export-mode .history-time {
-            width: 70px !important;
-            max-width: 70px !important;
-            min-width: 70px !important;
-            white-space: nowrap !important;
-            text-align: right !important;
-            justify-self: end !important;
-            font-variant-numeric: tabular-nums !important;
-            font-size: 9pt !important;
+            width: 48px !important; max-width: 48px !important; min-width: 48px !important;
+            text-align: center !important; justify-self: center !important;
+            font-size: 7.5pt !important; font-variant-numeric: tabular-nums !important;
         }
-
+        .export-mode .history-perc {
+            width: 36px !important; max-width: 36px !important; min-width: 36px !important;
+            text-align: center !important; justify-self: center !important; font-size: 7.5pt !important;
+        }
         .export-mode .element-desc-print {
-            width: 100% !important;
-            min-width: 0 !important;
-            font-size: 9pt !important;
-            line-height: 1.3 !important;
-            color: #111827 !important;
+            width: 100% !important; min-width: 0 !important;
+            font-size: 7.5pt !important; line-height: 1.2 !important; color: #111827 !important;
         }
 
     
@@ -507,12 +486,7 @@ body.export-mode .history-perc{
   justify-self: center !important;
 }
 
-/* Relatório: reduzir gap e definir larguras das colunas */
-body.export-mode .history-table-header,
-body.export-mode .history-row{
-  column-gap: 6px !important;
-  grid-template-columns: 50px 100px 70px 66px 54px 1fr !important;
-}
+/* Relatório: colunas já definidas no bloco principal acima (28px 72px 46px 50px 38px 1fr) */
 
 /* ===== v2.0 — Centralização dos textos das colunas (relatório) ===== */
 body.export-mode .history-table-header > div{
@@ -522,7 +496,7 @@ body.export-mode .history-table-header > div{
 </style>
 </head>
 <body>
-<div class="app-version" id="appVersion">v2.0</div>
+<div class="app-version" id="appVersion">v2.2</div>
 
 <div class="modal-overlay" id="manualModal">
     <div class="modal-content">
@@ -593,7 +567,7 @@ body.export-mode .history-table-header > div{
         </div>
         <div style="text-align: right;">
             <p><strong>Data:</strong> <span id="printDate">--/--/----</span></p>
-            <p><strong>Analista:</strong> Pedro Portela</p>
+            <p><strong>Analista:</strong> <span id="printAnalyst">—</span></p>
         </div>
     </div>
 
@@ -603,6 +577,10 @@ body.export-mode .history-table-header > div{
                 <div class="input-group" style="margin-bottom: 10px;">
                     <label>Equipamento / Produto / Operação</label>
                     <input type="text" id="equipName" placeholder="Ex: Setup Injetora 04..." >
+                </div>
+                <div class="input-group" style="margin-bottom: 10px;">
+                    <label>Analista Responsável</label>
+                    <input type="text" id="analystName" placeholder="Nome de quem está medindo...">
                 </div>
             </div>
 
@@ -622,7 +600,7 @@ body.export-mode .history-table-header > div{
                 <div class="live-timer" id="liveTimer">00:00.00</div>
     <div class="goal-wrapper">
       <div class="input-group">
-        <label class="goal-label">Meta do clico (padrão) (hh:mm:ss) <span class="info-inline" onclick="showInfo('metaCiclo')">!</span></label>
+        <label class="goal-label">Meta do ciclo (padrão) (hh:mm:ss) <span class="info-inline" onclick="showInfo('metaCiclo')">!</span></label>
         <input type="text" id="goalTime" placeholder="00:00:00" inputmode="numeric" pattern="[0-9]*" autocomplete="off" oninput="formatGoalInput(this)">
       </div>
     </div>
@@ -730,7 +708,7 @@ body.export-mode .history-table-header > div{
 <script>
     const glossario = {
   equipName: { title: 'Operação analisada', text: 'Identificação do estudo (equipamento/produto/operação). Esse nome aparece no relatório e também no arquivo exportado.' },
-  metaCiclo: { title: 'Meta do clico (padrão) (hh:mm:ss)', text: 'Tempo-alvo total para concluir o ciclo padrão. Digite em hh:mm:ss (preenchimento da direita para a esquerda). Ao finalizar, o tempo total ficará VERDE se estiver dentro da meta e VERMELHO se exceder.' },
+  metaCiclo: { title: 'Meta do ciclo (padrão) (hh:mm:ss)', text: 'Tempo-alvo total para concluir o ciclo padrão. Digite em hh:mm:ss (preenchimento da direita para a esquerda). Ao finalizar, o tempo total ficará VERDE se estiver dentro da meta e VERMELHO se exceder.' },
   amostras: { title: 'Etapas (n)', text: 'Quantidade de etapas registradas neste ciclo.' },
   tempoTotal: { title: 'Tempo total', text: 'Soma de todas as etapas registradas (Humano + Máquina + Espera). Representa 100% do ciclo analisado.' },
   tempoHumano: { title: 'Tempo humano', text: 'Tempo total de atividades executadas pelo operador (trabalho manual).' },
@@ -829,12 +807,16 @@ function showInfo(key) {
 
         closeManualModal();
         updateUI();
+        saveToStorage();
     }
 
     async function prepareCapture() {
         const equipName = document.getElementById('equipName').value.trim() || 'Não Informado';
         document.getElementById('printEquipName').innerText = equipName;
-        
+
+        const analyst = document.getElementById('analystName').value.trim() || 'Não informado';
+        document.getElementById('printAnalyst').innerText = analyst;
+
         let hoje = new Date();
         document.getElementById('printDate').innerText = hoje.toLocaleDateString('pt-BR') + " às " + hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
@@ -963,9 +945,11 @@ function showInfo(key) {
 
     function buildWhatsAppSummary() {
         const m = getMetricsSnapshot();
+        const analyst = document.getElementById('analystName').value.trim() || 'Não informado';
         return [
             `📄 DADOS TÉCNICOS`,
             `🏭 *Operação:* ${m.equipName}`,
+            `👤 *Analista:* ${analyst}`,
             `🔢 *Etapas registradas:* ${m.samples}`,
             ``,
             `⏱️ *Tempo total do ciclo:* ${m.total}`,
@@ -993,34 +977,38 @@ function showInfo(key) {
         });
 
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('l', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfW = pdf.internal.pageSize.getWidth();   // 210mm
+        const pdfH = pdf.internal.pageSize.getHeight();  // 297mm
 
         const img = new Image();
         img.src = imgDataUrl;
-        await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-        });
+        await new Promise(r => img.onload = r);
 
-        const ratio = img.width / img.height;
-        const pageRatio = pdfWidth / pdfHeight;
-        let renderWidth, renderHeight, x, y;
+        const imgWmm = pdfW;
+        const imgHmm = img.height * (pdfW / img.width);
 
-        if (ratio > pageRatio) {
-            renderWidth = pdfWidth;
-            renderHeight = pdfWidth / ratio;
-            x = 0;
-            y = (pdfHeight - renderHeight) / 2;
+        if (imgHmm <= pdfH) {
+            pdf.addImage(imgDataUrl, 'PNG', 0, 0, imgWmm, imgHmm, undefined, 'FAST');
         } else {
-            renderHeight = pdfHeight;
-            renderWidth = pdfHeight * ratio;
-            y = 0;
-            x = (pdfWidth - renderWidth) / 2;
+            // Multi-página: fatia a imagem em blocos de altura A4
+            const pxPerMm = img.width / pdfW;
+            const pageHeightPx = pdfH * pxPerMm;
+            let offsetPx = 0;
+            let page = 0;
+            while (offsetPx < img.height) {
+                if (page > 0) pdf.addPage();
+                const sliceH = Math.min(pageHeightPx, img.height - offsetPx);
+                const c = document.createElement('canvas');
+                c.width = img.width;
+                c.height = Math.ceil(sliceH);
+                c.getContext('2d').drawImage(img, 0, -offsetPx);
+                const sliceHmm = c.height / pxPerMm;
+                pdf.addImage(c.toDataURL('image/png'), 'PNG', 0, 0, pdfW, sliceHmm, undefined, 'FAST');
+                offsetPx += pageHeightPx;
+                page++;
+            }
         }
-
-        pdf.addImage(imgDataUrl, 'PNG', x, y, renderWidth, renderHeight, undefined, 'FAST');
         return pdf.output('blob');
     }
 
@@ -1239,13 +1227,15 @@ function updateLiveTimer() {
             desc: '' 
         });
         
-        lastElementTime = now; 
+        lastElementTime = now;
         updateUI();
+        saveToStorage();
     }
 
     function deleteElement(id) {
         elements = elements.filter(el => el.id !== id);
         updateUI();
+        saveToStorage();
     }
 
     function toggleVA(id) {
@@ -1255,15 +1245,15 @@ function updateLiveTimer() {
             else if (el.va === 'nva') el.va = 'bnva';
             else el.va = 'va';
             updateUI();
+            saveToStorage();
         }
     }
 
     function updateDesc(id, value) {
         let el = elements.find(e => e.id === id);
-        if(el) {
-            el.desc = value;
-            updateUI();
-        }
+        if(el) el.desc = value;
+        // updateUI() removido aqui: re-renderizar a cada tecla destruía o input e fazia perder o foco.
+        // O salvamento acontece em tempo real no array; o Gantt/resumo atualiza ao sair do campo (onblur).
     }
 
     function updateUI() {
@@ -1394,7 +1384,8 @@ function updateLiveTimer() {
             input.className = 'element-desc screen-only';
             input.placeholder = placeholderStr;
             input.value = el.desc || '';
-            input.onchange = () => updateDesc(el.id, input.value);
+            input.oninput = () => updateDesc(el.id, input.value);
+            input.onblur = () => updateUI();
             row.appendChild(input);
 
             const descPrint = document.createElement('span');
@@ -1481,6 +1472,7 @@ function updateLiveTimer() {
         let movedEl = elements.splice(fromIdx, 1)[0];
         elements.splice(toIdx, 0, movedEl);
         updateUI();
+        saveToStorage();
     }
 
 
@@ -1513,6 +1505,42 @@ function updateLiveTimer() {
         });
     }
 
+    // ==========================================
+    // PERSISTÊNCIA DE SESSÃO (localStorage)
+    // ==========================================
+    const STORAGE_KEY = 'cronoanalise_operacao_v2';
+
+    function saveToStorage() {
+        const config = {
+            equipName: document.getElementById('equipName').value,
+            analystName: document.getElementById('analystName').value,
+            goalTime: document.getElementById('goalTime').value
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ config, elements, elementCounterId }));
+    }
+
+    function loadFromStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (data.config) {
+                document.getElementById('equipName').value = data.config.equipName || '';
+                document.getElementById('analystName').value = data.config.analystName || '';
+                document.getElementById('goalTime').value = data.config.goalTime || '';
+            }
+            if (Array.isArray(data.elements) && data.elements.length > 0) {
+                elements = data.elements;
+                elementCounterId = data.elementCounterId || elements.length;
+                updateUI();
+            }
+        } catch(e) {
+            console.warn('Erro ao carregar sessão salva:', e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFromStorage);
+
     function resetTimer() {
         if(elements.length > 0 && !confirm("Deseja apagar os dados deste ciclo?")) return;
 
@@ -1532,6 +1560,7 @@ function updateLiveTimer() {
         document.getElementById('btnLapProcesso').disabled = true;
         document.getElementById('equipName').disabled = false;
         
+        localStorage.removeItem(STORAGE_KEY);
         updateUI();
         updateGoalStatus();
     }
